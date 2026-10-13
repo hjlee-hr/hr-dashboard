@@ -52,6 +52,7 @@ td.n,th.n{text-align:right}.hide{display:none}
 #login button.p{margin-top:18px;padding:15px;font-size:17px;font-weight:800;border-radius:14px;background:#2f80ff;color:#fff;box-shadow:0 8px 20px rgba(47,128,255,.3)}
 #login .note{margin:14px 0 0;font-size:12px;color:var(--mu)}
 td.wr{white-space:normal;min-width:150px}
+.c{text-align:center}.ct th,.ct td{text-align:center}
 .pill{padding:2px 9px;border-radius:99px;font-size:12px;font-weight:700}.pill.w{background:#fef3c7;color:#92400e}.pill.r{background:#fee2e2;color:#991b1b}
 </style>
 </head>
@@ -161,8 +162,11 @@ function sched(m){
   const org=latestOrg(),ex=[];
   org.forEach(r=>String(r['퇴사예정자']||'').split(',').map(x=>x.trim()).filter(x=>x&&x!=='-').forEach(n=>ex.push({n,d:r['Division'],t:r['Team']})));
   card(m,`퇴사 예정 (${ex.length}명)`,(ex.length?`<div class="tw"><table><thead><tr><th>순번</th><th>이름</th><th>Division</th><th>Team</th></tr></thead><tbody>${ex.map((x,i)=>`<tr><td>${i+1}</td><td>${esc(x.n)}</td><td>${esc(x.d)}</td><td>${esc(x.t)}</td></tr>`).join('')}</tbody></table></div>`:'퇴사 예정자가 없습니다.')+'<p style="color:var(--mu);font-size:13px;margin:10px 0 0">※ 퇴사 예정일은 현재 시트에 없어 날짜는 표시되지 않습니다.</p>');
-  const nt=org.filter(r=>String(r['특이사항']||'').trim());
-  card(m,'입사 예정 · 특이사항 (조직 시트 특이사항 입력 내용)',nt.length?`<div class="tw"><table><thead><tr><th>Division</th><th>Team</th><th>특이사항</th></tr></thead><tbody>${nt.map(r=>`<tr><td>${esc(r['Division'])}</td><td>${esc(r['Team'])}</td><td class="wr">${esc(r['특이사항'])}</td></tr>`).join('')}</tbody></table></div>`:'입력된 특이사항이 없습니다. 02시트 특이사항 열에 입사예정자를 적으면 여기에 나타납니다.');
+  const HK=hk(org),hr=[];
+  if(HK)org.forEach(r=>String(r['입사예정자']||'').split(',').map(x=>x.trim()).filter(x=>x&&x!=='-').forEach(n=>hr.push({n,d:r['Division'],t:r['Team']})));
+  if(HK)card(m,`입사 예정 (${hr.length}명)`,(hr.length?`<div class="tw"><table><thead><tr><th>순번</th><th>이름</th><th>Division</th><th>Team</th></tr></thead><tbody>${hr.map((x,i)=>`<tr><td>${i+1}</td><td>${esc(x.n)}</td><td>${esc(x.d)}</td><td>${esc(x.t)}</td></tr>`).join('')}</tbody></table></div>`:'입사 예정자가 없습니다.')+'<p style="color:var(--mu);font-size:13px;margin:10px 0 0">※ 입사 예정자는 재직자수에 포함되지 않습니다.</p>');
+  else{const nt=org.filter(r=>String(r['특이사항']||'').trim());
+  card(m,'특이사항',nt.length?`<div class="tw"><table><thead><tr><th>Division</th><th>Team</th><th>특이사항</th></tr></thead><tbody>${nt.map(r=>`<tr><td>${esc(r['Division'])}</td><td>${esc(r['Team'])}</td><td class="wr">${esc(r['특이사항'])}</td></tr>`).join('')}</tbody></table></div>`:'입력된 특이사항이 없습니다.');}
 }
 
 /* 월간 요약 문구 복사 (Slack 보고용) */
@@ -174,7 +178,7 @@ function copyCard(m){
    `• 실제 근무인원 ${cur-lv}명 (휴직 ${lv}명 제외)`,
    e?`• 고용형태: 임원 ${num(e['임원'])} / 정규직 ${num(e['정규직'])} / 계약직 ${num(e['계약직'])} / 파견직 ${num(e['파견직'])}`:'',
    l['신규입사자']!==undefined?`• 당월 입사 ${l['신규입사자']}명 / 퇴사 ${l['퇴사자']}명 (말일 퇴사자 미포함)`:'',
-   `• 퇴사 예정 ${ex}명 / 30일 내 복직 예정 ${soon}명`].filter(Boolean).join('\n');
+   `• 입사 예정 ${hk(org)?SC(org,'입사예정자'):0}명 / 퇴사 예정 ${ex}명 / 30일 내 복직 예정 ${soon}명`].filter(Boolean).join('\n');
   card(m,'월간 요약 문구 (Slack 보고용)','<textarea id="cp" rows="7" style="width:100%;font:inherit;padding:10px;border-radius:8px;border:1px solid var(--bd);background:var(--card);color:var(--tx)"></textarea><div class="bar" style="margin:10px 0 0"><button class="p" id="cpb" type="button">문구 복사</button><small id="cpm" style="color:var(--mu)"></small></div>');
   $('cp').value=txt;
   $('cpb').onclick=async()=>{try{await navigator.clipboard.writeText($('cp').value);}catch(x){$('cp').select();document.execCommand('copy');}$('cpm').textContent='복사되었습니다. Slack에 붙여넣기 하세요.';};
@@ -182,6 +186,7 @@ function copyCard(m){
 
 /* 3. 조직 */
 const cnt=v=>String(v||'').split(',').map(x=>x.trim()).filter(x=>x&&x!=='-').length;
+const hk=rows=>rows.some(r=>'입사예정자' in r);
 const SC=(a,k)=>a.reduce((s,r)=>s+cnt(r[k]),0);
 const nm=v=>{const n=cnt(v);return n?`${n}명 (${esc(String(v).trim())})`:'-';};
 function org(m){
@@ -191,12 +196,13 @@ function org(m){
     const fd=$('fd').value,ft=$('ft').value.trim().toLowerCase();
     const g={};rows.forEach(r=>{if(fd&&r['Division']!==fd)return;if(ft&&!String(r['Team']).toLowerCase().includes(ft))return;(g[r['Division']]=g[r['Division']]||[]).push(r);});
     const S=(a,k)=>a.reduce((s,r)=>s+num(r[k]),0);
-    let h='<table><thead><tr><th>Division / Team</th><th class="n">전월말</th><th class="n">현재</th><th class="n">차이</th><th class="n">당월 HC 포함 휴직자</th><th class="n">당월 HC 포함 퇴사예정자</th><th>특이사항</th></tr></thead><tbody>';
+    const HK=hk(rows);
+    let h='<table><thead><tr><th>Division / Team</th><th class="n">전월말</th><th class="n">현재</th><th class="n">차이</th><th class="c">당월 HC 포함 휴직자</th><th class="c">당월 HC 포함 퇴사예정자</th><th class="c">'+(HK?'입사예정자':'특이사항')+'</th></tr></thead><tbody>';
     const A=[].concat(...Object.values(g));
-    h+=`<tr class="tot"><td>전체 (${A.length}개 Team)</td><td class="n">${S(A,'전월말 HC')}</td><td class="n">${S(A,'현재 HC')}</td><td class="n">${sgn(S(A,'차이'))}</td><td class="n">${SC(A,'휴직자')}명</td><td class="n">${SC(A,'퇴사예정자')}명</td><td></td></tr>`;
+    h+=`<tr class="tot"><td>전체 (${A.length}개 Team)</td><td class="n">${S(A,'전월말 HC')}</td><td class="n">${S(A,'현재 HC')}</td><td class="n">${sgn(S(A,'차이'))}</td><td class="c">${SC(A,'휴직자')}명</td><td class="c">${SC(A,'퇴사예정자')}명</td><td class="c">${HK?SC(A,'입사예정자')+'명':''}</td></tr>`;
     Object.keys(g).forEach(dv=>{const a=g[dv],o=ft||fd||open.has(dv);
-      h+=`<tr class="div" data-d="${esc(dv)}"><td>${o?'▾':'▸'} ${esc(dv)}</td><td class="n">${S(a,'전월말 HC')}</td><td class="n">${S(a,'현재 HC')}</td><td class="n">${sgn(S(a,'차이'))}</td><td class="n">${SC(a,'휴직자')}명</td><td class="n">${SC(a,'퇴사예정자')}명</td><td></td></tr>`;
-      if(o)a.forEach(r=>{h+=`<tr><td style="padding-left:28px">${esc(r['Team'])}</td><td class="n">${esc(r['전월말 HC'])}</td><td class="n">${esc(r['현재 HC'])}</td><td class="n">${sgn(num(r['차이']))}</td><td class="wr">${nm(r['휴직자'])}</td><td class="wr">${nm(r['퇴사예정자'])}</td><td class="wr">${esc(r['특이사항'])}</td></tr>`;});});
+      h+=`<tr class="div" data-d="${esc(dv)}"><td>${o?'▾':'▸'} ${esc(dv)}</td><td class="n">${S(a,'전월말 HC')}</td><td class="n">${S(a,'현재 HC')}</td><td class="n">${sgn(S(a,'차이'))}</td><td class="c">${SC(a,'휴직자')}명</td><td class="c">${SC(a,'퇴사예정자')}명</td><td class="c">${HK?SC(a,'입사예정자')+'명':''}</td></tr>`;
+      if(o)a.forEach(r=>{h+=`<tr><td style="padding-left:28px">${esc(r['Team'])}</td><td class="n">${esc(r['전월말 HC'])}</td><td class="n">${esc(r['현재 HC'])}</td><td class="n">${sgn(num(r['차이']))}</td><td class="wr c">${nm(r['휴직자'])}</td><td class="wr c">${nm(r['퇴사예정자'])}</td><td class="wr c">${HK?nm(r['입사예정자']):esc(r['특이사항'])}</td></tr>`;});});
     $('ot').innerHTML=h+'</tbody></table>';
     $('ot').querySelectorAll('tr.div').forEach(tr=>tr.onclick=()=>{const d=tr.dataset.d;open.has(d)?open.delete(d):open.add(d);draw();});
   };
@@ -229,7 +235,7 @@ function hcTab(m){
   if(!r.length){card(m,'월별 HC','데이터가 없습니다.');return;}
   const t=card(m,'월말 재직자 추이','<canvas height="110"></canvas>'),h=D['01_HC_Monthly'];
   charts.push(new Chart(t.querySelector('canvas'),{type:'line',data:{labels:h.map(x=>x['기준월']),datasets:[{label:'재직자수',data:h.map(x=>num(x['월말 재직자수'])),borderColor:'#2563eb',backgroundColor:'#2563eb',tension:.3}]},options:{plugins:{legend:{display:false}}}}));
-  card(m,'월별 HC (최신순)',`<div class="tw"><table><thead><tr>${cols.map(c=>`<th>${c}</th>`).join('')}</tr></thead><tbody>${r.map(x=>'<tr>'+cols.map(c=>c==='전월대비'?`<td>${sgn(num(x[c]))}</td>`:`<td>${esc(x[c])}</td>`).join('')+'</tr>').join('')}</tbody></table></div><small style="color:var(--mu)">퇴사자는 말일 퇴사자 미포함</small>`);
+  card(m,'월별 HC (최신순)',`<div class="tw"><table class="ct"><thead><tr>${cols.map(c=>`<th>${c}</th>`).join('')}</tr></thead><tbody>${r.map(x=>'<tr>'+cols.map(c=>c==='전월대비'?`<td>${sgn(num(x[c]))}</td>`:`<td>${esc(x[c])}</td>`).join('')+'</tr>').join('')}</tbody></table></div><small style="color:var(--mu)">말일 퇴사자는 재직자수에 포함 / 파견직 포함</small>`);
 }
 
 /* 5. 휴직 */
