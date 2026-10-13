@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>HR Dashboard</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+:root{--bg:#f6f7f9;--card:#fff;--tx:#1d2330;--mu:#6b7385;--ac:#2f5bea;--bd:#e3e6ec}
+@media(prefers-color-scheme:dark){:root{--bg:#10131a;--card:#1a1f2b;--tx:#e8ebf2;--mu:#98a0b3;--ac:#7c9bff;--bd:#2a3142}}
+*{box-sizing:border-box}body{margin:0;font-family:-apple-system,"Noto Sans KR",sans-serif;background:var(--bg);color:var(--tx)}
+#login{max-width:320px;margin:20vh auto;padding:24px;background:var(--card);border:1px solid var(--bd);border-radius:12px;text-align:center}
+input,button{font:inherit;padding:10px 12px;border-radius:8px;border:1px solid var(--bd);width:100%;margin-top:10px;background:var(--card);color:var(--tx)}
+button.p{background:var(--ac);color:#fff;border:0;cursor:pointer}
+#err{color:#d33;font-size:13px;min-height:18px;margin-top:8px}
+header{display:flex;justify-content:space-between;align-items:center;padding:14px 16px;border-bottom:1px solid var(--bd);background:var(--card)}
+header b{font-size:17px}header small{color:var(--mu)}
+nav{display:flex;gap:6px;overflow-x:auto;padding:10px 16px}
+nav button{width:auto;margin:0;white-space:nowrap;cursor:pointer}
+nav button.on{background:var(--ac);color:#fff;border-color:var(--ac)}
+main{padding:0 16px 32px;max-width:1100px;margin:auto}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:14px;margin-bottom:14px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:14px}
+.kpi{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:12px}
+.kpi span{color:var(--mu);font-size:12px}.kpi div{font-size:22px;font-weight:700;margin-top:4px}
+.tw{overflow-x:auto}table{border-collapse:collapse;width:100%;font-size:13px}
+th,td{padding:7px 9px;border-bottom:1px solid var(--bd);text-align:left;white-space:nowrap}th{color:var(--mu);font-weight:600}
+.hide{display:none}h3{margin:0 0 10px;font-size:15px}
+</style>
+</head>
+<body>
+<div id="login">
+  <h2 style="margin:0 0 4px">HR Dashboard</h2>
+  <div style="color:var(--mu);font-size:13px">비밀번호를 입력하세요</div>
+  <input id="pw" type="password" autocomplete="current-password" placeholder="Password">
+  <button class="p" id="go">입장</button>
+  <div id="err"></div>
+</div>
+
+<div id="app" class="hide">
+  <header><b>HR Dashboard</b><small id="upd"></small></header>
+  <nav id="nav"></nav>
+  <main id="main"></main>
+</div>
+
+<script>
+// ▼ Apps Script 웹앱 배포 후 받은 URL(…/exec)을 넣으세요
+const API_URL = 'https://script.google.com/macros/s/AKfycbwXyLVFWIs9gwOTK9ldQTDAK0HEK7ERQMOQt5YEVvef-SaH1xX6E7E86X3YUc4I2NViCw/exec';
+
+const TABS = ['요약','조직','고용형태','휴직','퇴사','데이터 상태'];
+const SHEETS = {'조직':'02_Organization_HC','고용형태':'03_Employment_Type','휴직':'04_Longterm_Leave','퇴사':'05_Offboarding','데이터 상태':'06_Data_Status'};
+let D = null, charts = [];
+const $ = id => document.getElementById(id);
+const num = v => Number(String(v||'').replace(/[^0-9.\-]/g,'')) || 0;
+
+async function login(pw){
+  $('err').textContent = '확인 중…';
+  try{
+    // text/plain → CORS preflight 없이 호출
+    const r = await fetch(API_URL,{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify({password:pw})});
+    const j = await r.json();
+    if(!j.ok){ $('err').textContent = j.error==='locked' ? '시도 횟수 초과. 10분 후 다시 시도하세요.' : '비밀번호가 올바르지 않습니다.'; return; }
+    D = j.data;
+    try{ sessionStorage.setItem('pw',pw); }catch(e){}
+    $('login').classList.add('hide'); $('app').classList.remove('hide');
+    init();
+  }catch(e){ $('err').textContent = '서버 연결 오류. 잠시 후 다시 시도하세요.'; }
+}
+$('go').onclick = () => login($('pw').value);
+$('pw').onkeydown = e => { if(e.key==='Enter') login($('pw').value); };
+try{ const s = sessionStorage.getItem('pw'); if(s) login(s); }catch(e){}
+
+function init(){
+  const st = (D['06_Data_Status']||[])[0];
+  $('upd').textContent = st ? `기준월 ${st['기준월']||''} · 수집 ${st['데이터 수집일시']||''}` : '';
+  $('nav').innerHTML = '';
+  TABS.forEach((t,i)=>{
+    const b = document.createElement('button'); b.textContent = t;
+    b.onclick = () => show(t,b); $('nav').appendChild(b);
+    if(i===0) show(t,b);
+  });
+}
+
+function show(tab,btn){
+  [...$('nav').children].forEach(x=>x.classList.remove('on')); btn.classList.add('on');
+  charts.forEach(c=>c.destroy()); charts = [];
+  const m = $('main'); m.innerHTML = '';
+  if(tab==='요약') return summary(m);
+  const rows = D[SHEETS[tab]]||[];
+  if(tab==='고용형태' && rows.length) chart(m,'고용형태 추이','bar',rows.map(r=>r['기준일']),
+    ['임원','정규직','계약직','파견직'].map(k=>({label:k,data:rows.map(r=>num(r[k]))})),true);
+  if(tab==='퇴사' && rows.length){
+    const c={}; rows.forEach(r=>{const k=r['퇴사사유']||'미기재'; c[k]=(c[k]||0)+1;});
+    const e=Object.entries(c).sort((a,b)=>b[1]-a[1]);
+    chart(m,'퇴사사유 분포','bar',e.map(x=>x[0]),[{label:'인원',data:e.map(x=>x[1])}]);
+  }
+  table(m,tab,rows);
+}
+
+function summary(m){
+  const hc = D['01_HC_Monthly']||[]; const last = hc[hc.length-1];
+  if(last){
+    const k = [['월말 재직자수',last['월말 재직자수']],['신규입사자',last['신규입사자']],['퇴사자',last['퇴사자']],['전월대비',last['전월대비']]];
+    m.insertAdjacentHTML('beforeend','<div class="kpis">'+k.map(x=>`<div class="kpi"><span>${x[0]}</span><div>${x[1]??'-'}</div></div>`).join('')+'</div>');
+    chart(m,'월별 재직자 추이','line',hc.map(r=>r['기준월']),[{label:'재직자수',data:hc.map(r=>num(r['월말 재직자수'])),tension:.3}]);
+    chart(m,'월별 입·퇴사','bar',hc.map(r=>r['기준월']),[{label:'입사',data:hc.map(r=>num(r['신규입사자']))},{label:'퇴사',data:hc.map(r=>num(r['퇴사자']))}]);
+  } else m.innerHTML = '<div class="card">데이터가 없습니다.</div>';
+}
+
+function chart(m,title,type,labels,datasets,stacked){
+  const d = document.createElement('div'); d.className='card';
+  d.innerHTML = `<h3>${title}</h3><canvas height="120"></canvas>`; m.appendChild(d);
+  charts.push(new Chart(d.querySelector('canvas'),{type,data:{labels,datasets},
+    options:{responsive:true,scales:stacked?{x:{stacked:true},y:{stacked:true}}:{},plugins:{legend:{display:datasets.length>1}}}}));
+}
+
+function table(m,title,rows){
+  const d = document.createElement('div'); d.className='card';
+  if(!rows.length){ d.innerHTML='데이터가 없습니다.'; m.appendChild(d); return; }
+  const cols = Object.keys(rows[0]);
+  d.innerHTML = `<h3>${title} (${rows.length}건)</h3><div class="tw"><table><thead><tr>${cols.map(c=>`<th>${c}</th>`).join('')}</tr></thead><tbody>${
+    rows.map(r=>'<tr>'+cols.map(c=>`<td>${esc(r[c])}</td>`).join('')+'</tr>').join('')}</tbody></table></div>`;
+  m.appendChild(d);
+}
+const esc = s => String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+</script>
+</body>
+</html>
