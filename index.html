@@ -55,7 +55,7 @@ td.n,th.n{text-align:right}.hide{display:none}
 <script>
 const API_URL = 'https://script.google.com/macros/s/AKfycbwXyLVFWIs9gwOTK9ldQTDAK0HEK7ERQMOQt5YEVvef-SaH1xX6E7E86X3YUc4I2NViCw/exec';
 const DETAIL_URL = 'https://docs.google.com/spreadsheets/d/1JN_ochVXMmX8KCRtqDYzbkm-GezNuLWRIydfD9uZKmI/edit?gid=46510504#gid=46510504';
-const TABS = ['요약','조직','고용형태','휴직','퇴사'];
+const TABS = ['요약','월별 HC','조직','휴직','퇴사'];
 const PAL = ['#2563eb','#f59e0b','#10b981','#ef4444','#8b5cf6','#06b6d4','#ec4899','#84cc16','#f97316','#64748b'];
 let D=null, charts=[];
 const $ = id => document.getElementById(id);
@@ -89,7 +89,7 @@ function init(){
 function show(t,b){
   [...$('nav').children].forEach(x=>x.classList.remove('on'));b.classList.add('on');
   killCharts();const m=$('main');m.innerHTML='';
-  ({'요약':summary,'조직':org,'고용형태':emp,'휴직':leave,'퇴사':off})[t](m);
+  ({'요약':summary,'월별 HC':hcTab,'조직':org,'휴직':leave,'퇴사':off})[t](m);
 }
 function killCharts(){charts.forEach(c=>c.destroy());charts=[];}
 function card(m,title,html){const d=document.createElement('div');d.className='card';d.innerHTML=(title?`<h3>${title}</h3>`:'')+(html||'');m.appendChild(d);return d;}
@@ -112,12 +112,13 @@ function summary(m){
   m.insertAdjacentHTML('beforeend',`<div class="kpis" style="margin-top:4px">
    <div class="kpi"><span>현재 재직자수</span><div>${cur}명</div><small>won과 임재환님 제외 / 파견직 포함</small></div>
    <div class="kpi"><span>전월말 대비</span><div>${sgn(cur-prev)}</div><small>전월말 ${prev}명</small></div>
-   ${l?`<div class="kpi"><span>신규입사자</span><div>${esc(l['신규입사자'])}</div></div><div class="kpi"><span>퇴사자</span><div>${esc(l['퇴사자'])}</div></div>`:''}</div>`);
+   ${l?`<div class="kpi"><span>신규입사자</span><div>${esc(l['신규입사자'])}</div></div><div class="kpi"><span>퇴사자</span><div>${esc(l['퇴사자'])}</div><small>말일 퇴사자 미포함</small></div>`:''}</div>`);
+  const g=document.createElement('div');g.className='grid';m.appendChild(g);empCard(g);divCard(g,org);
   if(!hc.length)return;
   const a=card(m,'월말 재직자 추이','<canvas height="110"></canvas>');
   charts.push(new Chart(a.querySelector('canvas'),{type:'line',data:{labels:hc.map(r=>r['기준월']),datasets:[{label:'재직자수',data:hc.map(r=>num(r['월말 재직자수'])),borderColor:'#2563eb',backgroundColor:'#2563eb',tension:.3}]},options:{plugins:{legend:{display:false}}}}));
   const b=card(m,'월별 입사·퇴사','<canvas height="110"></canvas>');
-  charts.push(new Chart(b.querySelector('canvas'),{type:'bar',data:{labels:hc.map(r=>r['기준월']),datasets:[{label:'입사',data:hc.map(r=>num(r['신규입사자'])),backgroundColor:'#10b981'},{label:'퇴사',data:hc.map(r=>num(r['퇴사자'])),backgroundColor:'#ef4444'}]}}));
+  charts.push(new Chart(b.querySelector('canvas'),{type:'bar',data:{labels:hc.map(r=>r['기준월']),datasets:[{label:'입사',data:hc.map(r=>num(r['신규입사자'])),backgroundColor:'#2563eb'},{label:'퇴사',data:hc.map(r=>num(r['퇴사자'])),backgroundColor:'#ef4444'}]}}));
 }
 
 /* 3. 조직 */
@@ -140,22 +141,44 @@ function org(m){
   draw();
 }
 
-/* 4. 고용형태 */
-function emp(m){
-  const e=D['03_Employment_Type']||[],l=e[e.length-1];if(!l){card(m,'','데이터가 없습니다.');return;}
-  const k=['정규직','계약직','파견직'],v=k.map(x=>num(l[x]));
-  const c=card(m,`고용형태 (기준일 ${esc(l['기준일'])})`,`<canvas height="130"></canvas><p>합계 <b>${v.reduce((a,b)=>a+b,0)}명</b>${l['장애인수']?` · 장애인 ${esc(l['장애인수'])}명`:''}</p>`);
+/* 고용형태 (요약 탭) */
+function empCard(m){
+  const e=D['03_Employment_Type']||[],l=e[e.length-1],p=e[e.length-2];if(!l)return;
+  const k=['임원','정규직','계약직','파견직'],v=k.map(x=>num(l[x])),tot=v.reduce((x,y)=>x+y,0);
+  const rows=k.map((x,i)=>{const d=p?v[i]-num(p[x]):null;return `<tr><td>${x}</td><td class="n">${v[i]}명</td>${p?`<td class="n">${sgn(d)}</td>`:''}</tr>`;}).join('');
+  const c=card(m,`고용형태 (기준일 ${esc(l['기준일'])})`,`<canvas height="170"></canvas><div class="tw" style="margin-top:10px"><table><thead><tr><th>구분</th><th class="n">현재</th>${p?`<th class="n">직전(${esc(p['기준일'])}) 대비</th>`:''}</tr></thead><tbody>${rows}<tr class="div"><td>합계</td><td class="n">${tot}명</td>${p?`<td class="n">${sgn(tot-k.reduce((x,y)=>x+num(p[y]),0))}</td>`:''}</tr></tbody></table></div>${l['장애인수']?`<p style="margin:8px 0 0;color:var(--mu)">장애인 ${esc(l['장애인수'])}명</p>`:''}`);
   pie(c,k,v);
+}
+
+/* Division별 현재 인원 (요약 탭) */
+function divCard(m,org){
+  const o={};org.forEach(r=>{const d=r['Division']||'미지정';o[d]=(o[d]||0)+num(r['현재 HC']);});
+  const e=Object.entries(o).sort((a,b)=>b[1]-a[1]);if(!e.length)return;
+  const c=card(m,'Division별 현재 인원','<canvas height="'+Math.max(170,e.length*26)+'"></canvas>');
+  hbar(c,e.map(x=>x[0]),e.map(x=>x[1]));
+}
+
+/* 월별 HC 탭 (01시트) */
+function hcTab(m){
+  const r=[...(D['01_HC_Monthly']||[])].reverse();
+  const cols=['기준월','데이터구분','월말 재직자수','신규입사자','퇴사자','전월말 HC','전월대비','갱신일'];
+  if(!r.length){card(m,'월별 HC','데이터가 없습니다.');return;}
+  const t=card(m,'월말 재직자 추이','<canvas height="110"></canvas>'),h=D['01_HC_Monthly'];
+  charts.push(new Chart(t.querySelector('canvas'),{type:'line',data:{labels:h.map(x=>x['기준월']),datasets:[{label:'재직자수',data:h.map(x=>num(x['월말 재직자수'])),borderColor:'#2563eb',backgroundColor:'#2563eb',tension:.3}]},options:{plugins:{legend:{display:false}}}}));
+  card(m,'월별 HC (최신순)',`<div class="tw"><table><thead><tr>${cols.map(c=>`<th>${c}</th>`).join('')}</tr></thead><tbody>${r.map(x=>'<tr>'+cols.map(c=>c==='전월대비'?`<td>${sgn(num(x[c]))}</td>`:`<td>${esc(x[c])}</td>`).join('')+'</tr>').join('')}</tbody></table></div><small style="color:var(--mu)">퇴사자는 말일 퇴사자 미포함</small>`);
 }
 
 /* 5. 휴직 */
 function leave(m){
   const r=D['04_Longterm_Leave']||[];
-  card(m,`당월 휴직중 (${r.length}명)`,tbl(r,['이름','Division','Team','휴직종류','휴직시작일','휴직만료일','복직 D-Day']));
+  card(m,`당월 휴직중 (${r.length}명)`,tbl(r,['이름','Division','Team','휴직종류','휴직시작일','휴직만료일','복직 D-Day'],true));
+  const o={};r.forEach(x=>{const d=x['Division']||'미지정';o[d]=(o[d]||0)+1;});
+  const e=Object.entries(o).sort((a,b)=>b[1]-a[1]);
+  if(e.length)card(m,'Division별 휴직 인원',`<div class="tw"><table><thead><tr><th>Division</th><th class="n">인원</th></tr></thead><tbody>${e.map(x=>`<tr><td>${esc(x[0])}</td><td class="n">${x[1]}명</td></tr>`).join('')}<tr class="div"><td>합계</td><td class="n">${r.length}명</td></tr></tbody></table></div>`);
 }
-function tbl(r,cols){
+function tbl(r,cols,idx){
   if(!r.length)return '데이터가 없습니다.';
-  return `<div class="tw"><table><thead><tr>${cols.map(c=>`<th>${c}</th>`).join('')}</tr></thead><tbody>${r.map(x=>'<tr>'+cols.map(c=>`<td>${esc(x[c])}</td>`).join('')+'</tr>').join('')}</tbody></table></div>`;
+  return `<div class="tw"><table><thead><tr>${idx?'<th>순번</th>':''}${cols.map(c=>`<th>${c}</th>`).join('')}</tr></thead><tbody>${r.map((x,i)=>'<tr>'+(idx?`<td>${i+1}</td>`:'')+cols.map(c=>`<td>${esc(x[c])}</td>`).join('')+'</tr>').join('')}</tbody></table></div>`;
 }
 
 /* 6. 퇴사 */
