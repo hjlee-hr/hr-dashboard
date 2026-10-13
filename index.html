@@ -35,6 +35,8 @@ main{padding:0 18px 36px;max-width:1150px;margin:auto}
 .tw{overflow-x:auto}table{border-collapse:collapse;width:100%;font-size:14px}
 th,td{padding:9px 10px;border-bottom:1px solid var(--bd);text-align:left;white-space:nowrap}
 th{color:var(--mu);font-weight:700;background:var(--bg);position:sticky;top:0}
+tr.tot td{font-weight:800;background:var(--bg);border-bottom:2px solid var(--bd)}
+.kpi div span{font-size:inherit;font-weight:inherit;color:inherit}.kpi div .up{color:var(--up)}.kpi div .dn{color:var(--dn)}
 tr.div td{font-weight:800;cursor:pointer;background:var(--bg)}
 td.n,th.n{text-align:right}.hide{display:none}
 </style>
@@ -108,9 +110,10 @@ function hbar(host,labels,vals){
 /* 1. 요약 */
 function summary(m){
   const org=latestOrg(),hc=D['01_HC_Monthly']||[],l=hc[hc.length-1];
-  const cur=org.reduce((s,r)=>s+num(r['현재 HC']),0),prev=org.reduce((s,r)=>s+num(r['전월말 HC']),0);
+  const cur=org.reduce((s,r)=>s+num(r['현재 HC']),0),prev=org.reduce((s,r)=>s+num(r['전월말 HC']),0),lv=(D['04_Longterm_Leave']||[]).length;
   m.insertAdjacentHTML('beforeend',`<div class="kpis" style="margin-top:4px">
    <div class="kpi"><span>현재 재직자수</span><div>${cur}명</div><small>won과 임재환님 제외 / 파견직 포함</small></div>
+   <div class="kpi"><span>실제 근무인원</span><div>${cur-lv}명</div><small>현재 재직자수 − 휴직자 ${lv}명</small></div>
    <div class="kpi"><span>전월말 대비</span><div>${sgn(cur-prev)}</div><small>전월말 ${prev}명</small></div>
    ${l?`<div class="kpi"><span>신규입사자</span><div>${esc(l['신규입사자'])}</div></div><div class="kpi"><span>퇴사자</span><div>${esc(l['퇴사자'])}</div><small>말일 퇴사자 미포함</small></div>`:''}</div>`);
   const g=document.createElement('div');g.className='grid';m.appendChild(g);empCard(g);divCard(g,org);
@@ -130,6 +133,8 @@ function org(m){
     const g={};rows.forEach(r=>{if(fd&&r['Division']!==fd)return;if(ft&&!String(r['Team']).toLowerCase().includes(ft))return;(g[r['Division']]=g[r['Division']]||[]).push(r);});
     const S=(a,k)=>a.reduce((s,r)=>s+num(r[k]),0);
     let h='<table><thead><tr><th>Division / Team</th><th class="n">전월말</th><th class="n">현재</th><th class="n">차이</th><th class="n">휴직자</th><th class="n">퇴사예정</th><th>특이사항</th></tr></thead><tbody>';
+    const A=[].concat(...Object.values(g));
+    h+=`<tr class="tot"><td>전체 (${A.length}개 Team)</td><td class="n">${S(A,'전월말 HC')}</td><td class="n">${S(A,'현재 HC')}</td><td class="n">${sgn(S(A,'차이'))}</td><td class="n">${S(A,'휴직자')}</td><td class="n">${S(A,'퇴사예정자')}</td><td></td></tr>`;
     Object.keys(g).forEach(dv=>{const a=g[dv],o=ft||fd||open.has(dv);
       h+=`<tr class="div" data-d="${esc(dv)}"><td>${o?'▾':'▸'} ${esc(dv)}</td><td class="n">${S(a,'전월말 HC')}</td><td class="n">${S(a,'현재 HC')}</td><td class="n">${sgn(S(a,'차이'))}</td><td class="n">${S(a,'휴직자')}</td><td class="n">${S(a,'퇴사예정자')}</td><td></td></tr>`;
       if(o)a.forEach(r=>{h+=`<tr><td style="padding-left:28px">${esc(r['Team'])}</td><td class="n">${esc(r['전월말 HC'])}</td><td class="n">${esc(r['현재 HC'])}</td><td class="n">${sgn(num(r['차이']))}</td><td class="n">${esc(r['휴직자'])}</td><td class="n">${esc(r['퇴사예정자'])}</td><td>${esc(r['특이사항'])}</td></tr>`;});});
