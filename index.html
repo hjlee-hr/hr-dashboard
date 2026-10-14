@@ -56,6 +56,9 @@ td.wr{white-space:normal;min-width:150px}
 .tg{margin-left:10px;font-size:13px;font-weight:400}.tg button{padding:3px 11px;font-size:13px;cursor:pointer;margin-right:4px}.tg button.on{background:var(--ac);color:#fff;border-color:var(--ac)}
 .c{text-align:center}.sep{border-left:3px solid var(--ac)!important}th.grp{text-align:center;font-weight:800;color:var(--tx);background:var(--bg)}.ct th,.ct td{text-align:center}
 .pill{padding:2px 9px;border-radius:99px;font-size:12px;font-weight:700}.pill.w{background:#fef3c7;color:#92400e}.pill.r{background:#fee2e2;color:#991b1b}
+header{flex-wrap:wrap;gap:8px}.hr{display:flex;align-items:center;gap:12px}.lk{position:relative}#lkb{cursor:pointer;font-weight:600}
+#lkm{position:absolute;right:0;top:calc(100% + 6px);background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:6px;min-width:240px;z-index:10;box-shadow:0 10px 30px rgba(0,0,0,.18)}
+#lkm a{display:block;padding:9px 12px;border-radius:8px;color:var(--tx);text-decoration:none;font-size:14px;font-weight:600}#lkm a:hover{background:var(--bg)}#lkm small{display:block;color:var(--mu);font-size:12px;font-weight:400}
 </style>
 </head>
 <body>
@@ -69,7 +72,7 @@ td.wr{white-space:normal;min-width:150px}
   <p class="note">브라우저 탭을 닫으면 다시 로그인이 필요합니다.</p>
 </div>
 <div id="app" class="hide">
-  <header><span class="hb"><img class="logo" id="hlogo" alt="KONG STUDIOS" height="32">콩스튜디오코리아 HR Dashboard</span><small id="upd"></small></header>
+  <header><span class="hb"><img class="logo" id="hlogo" alt="KONG STUDIOS" height="32">콩스튜디오코리아 HR Dashboard</span><div class="hr"><small id="upd"></small><div class="lk"><button type="button" id="lkb">🔗 바로가기 ▾</button><div id="lkm" class="hide"></div></div></div></header>
   <nav id="nav"></nav>
   <main id="main"></main>
 </div>
@@ -77,6 +80,11 @@ td.wr{white-space:normal;min-width:150px}
 // ▼ Apps Script 웹 앱 URL(…/exec)을 아래 따옴표 안에 붙여넣으세요
 const API_URL = 'https://script.google.com/macros/s/AKfycbxIlFNg7SvwYqatND2Cjsxly7gtiPlytHRmJTFrXBMMtYAUealo6P2mGkNGn6xnmeZwiw/exec';
 const DETAIL_URL = 'https://docs.google.com/spreadsheets/d/1JN_ochVXMmX8KCRtqDYzbkm-GezNuLWRIydfD9uZKmI/edit?gid=46510504#gid=46510504';
+const LINKS = [
+  {t:'월별 인사기록부 폴더',s:'구글 드라이브 · 접근 권한 필요',u:'https://drive.google.com/drive/folders/1QKzxdumWSDgSOQK6U023zUe7bYS2ZW09'},
+  {t:'채용 대시보드',s:'별도 비밀번호 필요',u:'https://sunggyuhong-eng.github.io/gpt-final/'},
+  {t:'퇴사 상세 사유 시트',s:'구글 시트 · 접근 권한 필요',u:DETAIL_URL}
+];
 const TABS = ['요약','월별 HC','조직','휴직','예정·알림','퇴사'];
 const PAL = ['#2563eb','#f59e0b','#10b981','#ef4444','#8b5cf6','#06b6d4','#ec4899','#84cc16','#f97316','#64748b'];
 let D=null, charts=[];
@@ -107,6 +115,9 @@ try{const s=sessionStorage.getItem('pw');if(s)login(s);}catch(e){}
 
 function init(){
   $('hlogo').src=$('logo').src;
+  $('lkm').innerHTML=LINKS.map(x=>`<a href="${x.u}" target="_blank" rel="noopener noreferrer">${esc(x.t)}<small>${esc(x.s)}</small></a>`).join('');
+  $('lkb').onclick=e=>{e.stopPropagation();$('lkm').classList.toggle('hide');};
+  document.addEventListener('click',()=>$('lkm').classList.add('hide'));
   const hc=D['01_HC_Monthly']||[],l=hc[hc.length-1];
   $('upd').textContent=l&&l['갱신일']?'갱신 '+l['갱신일']:'';
   Chart.defaults.color=getComputedStyle(document.body).color;
