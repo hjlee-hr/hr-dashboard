@@ -5,45 +5,24 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex,nofollow">
 <title>콩스튜디오코리아 HR Dashboard</title>
+<script>try{if(sessionStorage.getItem('pw'))document.documentElement.className='auto'}catch(e){}</script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <style>
-:root{--bg:#eef1f6;--card:#fff;--tx:#111827;--mu:#4b5563;--ac:#1d4ed8;--bd:#cfd6e2;--up:#047857;--dn:#b91c1c}
-@media(prefers-color-scheme:dark){:root{--bg:#0b0f17;--card:#171d29;--tx:#f3f4f6;--mu:#b6bdcc;--ac:#8fb0ff;--bd:#323b4f;--up:#34d399;--dn:#fb7185}}
-*{box-sizing:border-box}body{margin:0;font:15px/1.5 -apple-system,"Noto Sans KR",sans-serif;background:var(--bg);color:var(--tx)}
-#login{max-width:340px;margin:20vh auto;padding:26px;background:var(--card);border:1px solid var(--bd);border-radius:14px;text-align:center}
-input,select,button,a.btn{font:inherit;padding:9px 12px;border-radius:8px;border:1px solid var(--bd);background:var(--card);color:var(--tx)}
-#login input,#login button{width:100%;margin-top:10px}
-button.p,a.btn{background:var(--ac);color:#fff;border:0;cursor:pointer;text-decoration:none;display:inline-block}
+:root{--bg:#f6f8fc;--card:#fff;--tx:#161e2e;--mu:#6a7488;--ac:#2563eb;--acs:#eaf1ff;--bd:#e4e9f2;--up:#0a8f63;--dn:#dc3545}
+@media(prefers-color-scheme:dark){:root{--bg:#0c111b;--card:#151b27;--tx:#eef1f7;--mu:#a3adc2;--ac:#6ea0ff;--acs:#1b2740;--bd:#2a3347;--up:#34d399;--dn:#fb7185}}
+*{box-sizing:border-box}
+body{margin:0;font:15px/1.55 'Pretendard Variable',Pretendard,-apple-system,'Noto Sans KR','Malgun Gothic',sans-serif;background:var(--bg);color:var(--tx);-webkit-font-smoothing:antialiased}
+input,select,button,a.btn{font:inherit;padding:9px 12px;border-radius:10px;border:1px solid var(--bd);background:var(--card);color:var(--tx)}
+button.p,a.btn{background:var(--ac);color:#fff;border:0;cursor:pointer;text-decoration:none;display:inline-block;font-weight:600}
 @media(prefers-color-scheme:dark){button.p,a.btn{color:#0b0f17}}
+.hide{display:none}
+/* 로그인 */
+#login{max-width:430px;margin:9vh auto;padding:38px 32px 28px;background:var(--card);border:1px solid var(--bd);border-radius:26px;text-align:center;box-shadow:0 20px 50px rgba(30,60,120,.12)}
+#login input,#login button{width:100%;margin-top:10px}
 #err{color:var(--dn);font-size:14px;min-height:20px;margin-top:8px}
-header{display:flex;justify-content:space-between;align-items:center;padding:14px 18px;background:var(--card);border-bottom:2px solid var(--bd)}
-header b{font-size:19px}header small{color:var(--mu)}
-nav{display:flex;gap:8px;overflow-x:auto;padding:12px 18px}
-nav button{white-space:nowrap;cursor:pointer;font-weight:600}
-nav button.on{background:var(--ac);color:#fff;border-color:var(--ac)}
-@media(prefers-color-scheme:dark){nav button.on{color:#0b0f17}}
-main{padding:0 18px 36px;max-width:1150px;margin:auto}
-.card{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:16px;margin-bottom:16px}
-.card h3{margin:0 0 12px;font-size:17px}
-.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px}
-.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin-bottom:16px}
-.kpi{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:14px 16px}
-.kpi span{color:var(--mu);font-size:14px;font-weight:600}.kpi div{font-size:34px;font-weight:800;margin:2px 0}
-.kpi small{color:var(--mu);font-size:12px;display:block}
-.up{color:var(--up)}.dn{color:var(--dn)}
-.bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:12px}
-.tw{overflow-x:auto}table{border-collapse:collapse;width:100%;font-size:14px}
-th,td{padding:9px 10px;border-bottom:1px solid var(--bd);text-align:left;white-space:nowrap}
-th{color:var(--mu);font-weight:700;background:var(--bg);position:sticky;top:0}
-tr.tot td{font-weight:800;background:var(--bg);border-bottom:2px solid var(--bd)}
-.kpi div span{font-size:inherit;font-weight:inherit;color:inherit}.kpi div .up{color:var(--up)}.kpi div .dn{color:var(--dn)}
-tr.div td{font-weight:800;cursor:pointer;background:var(--bg)}
-td.n,th.n{text-align:right}.hide{display:none}
-#login{max-width:430px;margin:9vh auto;padding:38px 32px 28px;border-radius:26px;text-align:center;box-shadow:0 20px 50px rgba(30,60,120,.15)}
-.lh{display:flex;align-items:center;justify-content:center;gap:14px;margin-bottom:6px}.logo{height:48px;width:auto;display:block}.lt{text-align:left;line-height:1.25}.lt span{display:block;font-size:14px;font-weight:700;color:var(--mu)}.lt b{font-size:24px}
-.hb{display:flex;align-items:center;gap:10px;font-size:18px;font-weight:800}.hb .logo{height:32px}
-#login .brand{margin-top:16px;color:#2f80ff;font-weight:800;font-size:13px;letter-spacing:.08em}
-#login h1{margin:14px 0 8px;font-size:28px;line-height:1.3}
+.lh{display:flex;align-items:center;justify-content:center;gap:14px;margin-bottom:6px}.logo{height:48px;width:auto;display:block}
+.lt{text-align:left;line-height:1.25}.lt span{display:block;font-size:14px;font-weight:700;color:var(--mu)}.lt b{font-size:24px}
 #login .sub{margin:0 0 24px;color:var(--mu)}
 #login label{display:block;text-align:left;font-weight:700;font-size:14px;color:var(--mu)}
 .pwbox{display:flex;align-items:center;border:1px solid var(--bd);border-radius:14px;margin-top:8px;padding-right:6px;background:var(--card)}
@@ -51,33 +30,97 @@ td.n,th.n{text-align:right}.hide{display:none}
 #eye{width:auto!important;margin:0!important;border:0;background:transparent;cursor:pointer;font-size:18px}
 #login button.p{margin-top:18px;padding:15px;font-size:17px;font-weight:800;border-radius:14px;background:#2f80ff;color:#fff;box-shadow:0 8px 20px rgba(47,128,255,.3)}
 #login .note{margin:14px 0 0;font-size:12px;color:var(--mu)}
-td.wr{white-space:normal;min-width:150px}
-.pill.g{background:#d1fae5;color:#065f46}tr.pend td{background:rgba(245,158,11,.14)}
-.tg{margin-left:10px;font-size:13px;font-weight:400}.tg button{padding:3px 11px;font-size:13px;cursor:pointer;margin-right:4px}.tg button.on{background:var(--ac);color:#fff;border-color:var(--ac)}
+.auto #login{display:none}
+#boot{display:none;position:fixed;inset:0;align-items:center;justify-content:center;background:var(--bg);color:var(--mu);font-weight:600;z-index:99}
+.auto #boot{display:flex}
+/* 상단 바 */
+#app:not(.hide){display:block;min-height:100vh}
+#topbar{position:sticky;top:0;z-index:50;height:64px;display:flex;align-items:center;justify-content:space-between;padding:0 24px;background:var(--card);border-bottom:1px solid var(--bd)}
+.tl{display:flex;align-items:center;gap:14px}.tl .logo{height:38px}
+.tt b{display:block;font-size:19px;font-weight:800;line-height:1.2}.tt span{font-size:13px;color:var(--mu)}
+.trr{display:flex;gap:10px}
+.ob{display:inline-flex;align-items:center;gap:8px;padding:10px 16px;border-radius:12px;font-weight:600;cursor:pointer}
+.ob svg{width:17px;height:17px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.ob:disabled{opacity:.6;cursor:wait}
+/* 사이드바 */
+#body{display:flex;align-items:flex-start}
+#side{width:300px;flex:none;position:sticky;top:64px;height:calc(100vh - 100px);overflow-y:auto;background:var(--card);border-right:1px solid var(--bd);padding:34px 22px 40px}
+.se{color:var(--ac);font-weight:800;font-size:12px;letter-spacing:.14em}
+.sh{font-size:28px;font-weight:800;margin:4px 0 22px;letter-spacing:-.02em}
+#nav{display:flex;flex-direction:column;gap:12px}
+#nav button{display:flex;align-items:center;gap:14px;width:100%;text-align:left;background:var(--card);border:1px solid var(--bd);padding:16px;border-radius:16px;cursor:pointer;color:var(--tx)}
+#nav button:hover{border-color:#a9c6ff}
+#nav button svg{fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round;flex:none}
+#nav button .ic{width:22px;height:22px}#nav button .chev{width:16px;height:16px;color:var(--mu)}
+#nav button .tx{flex:1;min-width:0}
+#nav button b{display:block;font-size:15.5px;font-weight:700;line-height:1.25}
+#nav button small{display:block;font-size:11.5px;color:var(--mu);font-weight:500;margin-top:2px}
+#nav button.on{background:var(--acs);border-color:#a9c6ff;color:var(--ac)}
+#nav button.on small,#nav button.on .chev{color:var(--ac)}
+/* 본문 */
+#content{flex:1;min-width:0;padding-bottom:70px}
+#ph{display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:14px;padding:44px 40px 18px;max-width:1280px;margin:0 auto;position:relative;z-index:30}
+.eb{color:var(--ac);font-weight:800;font-size:12.5px;letter-spacing:.14em;text-transform:uppercase}
+#ph h1{margin:6px 0 0;font-size:40px;font-weight:800;letter-spacing:-.025em;line-height:1.2}
+.pr{display:flex;align-items:center;gap:12px}
+.asof{display:flex;align-items:center;gap:10px;background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:10px 16px}
+.asof svg{width:20px;height:20px;stroke:var(--mu);fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.asof small{display:block;font-size:11px;color:var(--mu);line-height:1.2}.asof b{font-size:14px;line-height:1.3}
+.lk{position:relative}
+#lkb{background:var(--ac);color:#fff;border:0;border-radius:14px;padding:15px 22px;font-weight:700;cursor:pointer;box-shadow:0 6px 16px rgba(37,99,235,.25)}
+@media(prefers-color-scheme:dark){#lkb{color:#0b0f17}}
+#lkm{position:absolute;right:0;top:calc(100% + 8px);background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:6px;min-width:260px;z-index:60;box-shadow:0 14px 34px rgba(0,0,0,.2)}
+#lkm a{display:block;padding:10px 12px;border-radius:10px;color:var(--tx);text-decoration:none;font-size:14px;font-weight:600}#lkm a:hover{background:var(--bg)}#lkm small{display:block;color:var(--mu);font-size:12px;font-weight:400}
+#content main{max-width:1280px;margin:0 auto;padding:0 40px 24px}
+#foot{position:fixed;left:0;right:0;bottom:0;height:36px;background:var(--card);border-top:1px solid var(--bd);display:flex;justify-content:flex-end;align-items:center;gap:20px;padding:0 24px;font-size:12px;color:var(--mu);z-index:45}
+.stk{position:sticky;top:64px;z-index:20;background:var(--bg);padding-top:6px;box-shadow:0 8px 8px -8px rgba(0,0,0,.18)}.stk .card{margin-bottom:8px}
+/* 카드 · 표 */
+.card{background:var(--card);border:1px solid var(--bd);border-radius:22px;padding:26px 28px;margin-bottom:18px}
+.card h3{margin:0 0 16px;font-size:20px;font-weight:800;letter-spacing:-.01em}
+.card h3 small{font-size:13px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:18px}.grid>.card{margin-bottom:0}
+.bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:12px}
+.tw{overflow-x:auto}table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{padding:11px 12px;border-bottom:1px solid var(--bd);text-align:left;white-space:nowrap}
+th{color:var(--mu);font-weight:600;background:var(--bg)}
+tr.tot td{font-weight:800;background:var(--bg);border-bottom:2px solid var(--bd)}
+tr.div td{font-weight:800;cursor:pointer;background:var(--bg)}
+td.n,th.n{text-align:right}td.wr{white-space:normal;min-width:150px}
 .c{text-align:center}.sep{border-left:2px solid var(--bd)!important}th.grp{text-align:center;font-weight:800;color:var(--tx);background:var(--bg)}.ct th,.ct td{text-align:center}
-.pill{padding:2px 9px;border-radius:99px;font-size:12px;font-weight:700}.pill.w{background:#fef3c7;color:#92400e}.pill.r{background:#fee2e2;color:#991b1b}
-header{flex-wrap:wrap;gap:8px}.hr{display:flex;align-items:center;gap:12px}.lk{position:relative}#lkb{cursor:pointer;font-weight:600}
-#lkm{position:absolute;right:0;top:calc(100% + 6px);background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:6px;min-width:240px;z-index:10;box-shadow:0 10px 30px rgba(0,0,0,.18)}
-#lkm a{display:block;padding:9px 12px;border-radius:8px;color:var(--tx);text-decoration:none;font-size:14px;font-weight:600}#lkm a:hover{background:var(--bg)}#lkm small{display:block;color:var(--mu);font-size:12px;font-weight:400}
-#top{position:sticky;top:0;z-index:30;background:var(--bg);box-shadow:0 2px 10px rgba(0,0,0,.08)}
-#app:not(.hide){display:flex;min-height:100vh;align-items:flex-start}
-#side{width:250px;flex:none;position:sticky;top:0;height:100vh;overflow-y:auto;background:var(--card);border-right:1px solid var(--bd);padding:18px 12px;z-index:40}
-.sb{display:flex;align-items:center;gap:10px;padding:2px 8px 16px;border-bottom:1px solid var(--bd);margin-bottom:12px}.sb .logo{height:30px}
-.st span{display:block;font-size:12px;color:var(--mu);font-weight:700}.st b{font-size:16px}
-#nav{display:flex;flex-direction:column;gap:4px}
-#nav button{display:flex;align-items:center;gap:12px;width:100%;text-align:left;border:0;background:transparent;padding:10px 12px;border-radius:10px;cursor:pointer;font:inherit;color:var(--tx)}
-#nav button:hover{background:var(--bg)}
-#nav button svg{width:20px;height:20px;flex:none;stroke:currentColor;fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
-#nav button b{display:block;font-size:14.5px;line-height:1.25}#nav button small{display:block;font-size:11.5px;opacity:.7;font-weight:400}
-#nav button.on{background:var(--ac);color:#fff}
-@media(prefers-color-scheme:dark){#nav button.on{color:#0b0f17}}
-#content{flex:1;min-width:0}
-#ph{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;padding:22px 18px 10px;max-width:1150px;margin:0 auto}
-#ph h1{margin:0;font-size:26px}#ph h1 small{font-size:14px;color:var(--mu);font-weight:600;margin-left:8px}
-#content main{margin:0 auto}
-.stk{position:sticky;top:0;z-index:20;background:var(--bg);padding-top:6px;box-shadow:0 8px 8px -8px rgba(0,0,0,.18)}.stk .card{margin-bottom:8px}
 tr td.g2,tr th.g2{background:rgba(100,116,139,.09)!important}
-@media(max-width:860px){#app:not(.hide){flex-direction:column}#side{width:100%;height:auto;flex:none;padding:8px;overflow-x:auto;overflow-y:hidden;border-right:0;border-bottom:1px solid var(--bd)}.sb{display:none}#nav{flex-direction:row}#nav button{width:auto;white-space:nowrap;padding:8px 12px}#nav button small{display:none}}
+.up{color:var(--up)}.dn{color:var(--dn)}
+.pill{padding:2px 9px;border-radius:99px;font-size:12px;font-weight:700}.pill.w{background:#fef3c7;color:#92400e}.pill.r{background:#fee2e2;color:#991b1b}.pill.g{background:#d1fae5;color:#065f46}
+tr.pend td{background:rgba(245,158,11,.14)}
+.tg{margin-left:10px;font-size:13px;font-weight:400}.tg button{padding:3px 11px;font-size:13px;cursor:pointer;margin-right:4px}.tg button.on{background:var(--ac);color:#fff;border-color:var(--ac)}
+/* KPI 카드 */
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(205px,1fr));gap:16px;margin-bottom:18px}
+.kpi{display:flex;align-items:center;gap:16px;background:var(--card);border:1px solid var(--bd);border-radius:22px;padding:24px 26px}
+.kpi em{width:44px;height:44px;flex:none;color:var(--ac);display:flex;align-items:center;justify-content:center}
+.kpi em svg{width:30px;height:30px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.kt{min-width:0}.kt>span{display:block;color:var(--mu);font-size:14.5px;font-weight:500}
+.kt>b{display:block;font-size:40px;font-weight:800;line-height:1.15;margin:2px 0;letter-spacing:-.02em}
+.kt>small{display:block;color:var(--mu);font-size:12px}
+.card .kpi{background:var(--bg);border-radius:18px;padding:20px 22px}
+/* 도넛 + 범례 */
+.pw{display:flex;align-items:center;justify-content:center;gap:28px;flex-wrap:wrap}
+.pc{position:relative;width:210px;height:210px;flex:none}
+.pcn{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none}
+.pcn b{font-size:34px;font-weight:800;line-height:1.1}.pcn span{font-size:12px;color:var(--mu)}
+.pl{list-style:none;margin:0;padding:0;flex:1;min-width:230px}
+.pl li{display:flex;align-items:center;gap:10px;padding:5px 0;font-size:14px}
+.pl i{width:10px;height:10px;border-radius:50%;flex:none}
+.pl span{flex:1;font-weight:600}.pl em{font-style:normal;color:var(--mu);width:46px;text-align:right}.pl b{width:56px;text-align:right}
+/* 반응형 */
+@media(max-width:860px){
+  #body{flex-direction:column}
+  #side{position:static;width:100%;height:auto;padding:12px;border-right:0;border-bottom:1px solid var(--bd)}
+  .se,.sh{display:none}
+  #nav{flex-direction:row;overflow-x:auto;gap:8px}
+  #nav button{width:auto;white-space:nowrap;padding:10px 14px}#nav button small,#nav button .chev{display:none}
+  #topbar{padding:0 12px}.ob span{display:none}.tt span{display:none}
+  #ph{padding:22px 16px 12px}#ph h1{font-size:28px}#content main{padding:0 16px 24px}
+  .stk{top:64px}
+}
 </style>
 </head>
 <body>
@@ -91,15 +134,23 @@ tr td.g2,tr th.g2{background:rgba(100,116,139,.09)!important}
   <p class="note">브라우저 탭을 닫으면 다시 로그인이 필요합니다.</p>
 </div>
 <div id="app" class="hide">
-  <aside id="side">
-    <div class="sb"><img class="logo" id="hlogo" alt="KONG STUDIOS" height="30"><div class="st"><span>콩스튜디오코리아</span><b>HR Dashboard</b></div></div>
-    <div id="nav"></div>
-  </aside>
-  <div id="content">
-    <div id="ph"><div id="pt"></div><div class="hr"><small id="upd"></small><div class="lk"><button type="button" id="lkb">🔗 바로가기 ▾</button><div id="lkm" class="hide"></div></div></div></div>
-    <main id="main"></main>
+  <div id="topbar">
+    <div class="tl"><img class="logo" id="hlogo" alt="KONG STUDIOS" height="38"><div class="tt"><b>HR 대시보드</b><span>콩스튜디오코리아</span></div></div>
+    <div class="trr">
+      <button type="button" class="ob" id="refresh"><svg viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-3-6.7L21 8"/><path d="M21 3v5h-5"/></svg><span>데이터 다시 불러오기</span></button>
+      <button type="button" class="ob" id="logout"><svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="m16 17 5-5-5-5"/><path d="M21 12H9"/></svg><span>로그아웃</span></button>
+    </div>
   </div>
+  <div id="body">
+    <aside id="side"><div class="se">HR REPORT</div><div class="sh">인사 현황</div><div id="nav"></div></aside>
+    <div id="content">
+      <div id="ph"><div id="pt"></div><div class="pr"><div class="asof"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg><div><small>갱신일</small><b id="upd">-</b></div></div><div class="lk"><button type="button" id="lkb">🔗 바로가기 ▾</button><div id="lkm" class="hide"></div></div></div></div>
+      <main id="main"></main>
+    </div>
+  </div>
+  <div id="foot"></div>
 </div>
+<div id="boot">불러오는 중…</div>
 <script>
 // ▼ Apps Script 웹 앱 URL(…/exec)을 아래 따옴표 안에 붙여넣으세요
 const API_URL = 'https://script.google.com/macros/s/AKfycbxIlFNg7SvwYqatND2Cjsxly7gtiPlytHRmJTFrXBMMtYAUealo6P2mGkNGn6xnmeZwiw/exec';
@@ -110,12 +161,12 @@ const LINKS = [
   {t:'퇴사 상세 사유 시트',s:'구글 시트 · 접근 권한 필요',u:DETAIL_URL}
 ];
 const TABS = [
-  {k:'sum',t:'요약',e:'Summary'},
-  {k:'notice',t:'예정·알림',e:'Notice'},
-  {k:'hc',t:'월별 인원현황',e:'Monthly HC'},
-  {k:'org',t:'조직별 인원현황',e:'Organization HC'},
-  {k:'leave',t:'장기휴직',e:'Long-Term Leave'},
-  {k:'term',t:'퇴사현황',e:'Termination'}
+  {k:'sum',t:'요약',e:'Summary',h:'인원 현황 요약'},
+  {k:'notice',t:'예정·알림',e:'Notice',h:'예정·알림'},
+  {k:'hc',t:'월별 인원현황',e:'Monthly HC',h:'월별 인원현황'},
+  {k:'org',t:'조직별 인원현황',e:'Organization HC',h:'조직별 인원현황'},
+  {k:'leave',t:'장기휴직',e:'Long-Term Leave',h:'장기휴직'},
+  {k:'term',t:'퇴사현황',e:'Termination',h:'퇴사현황'}
 ];
 const ICON = {
   sum:'<rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/>',
@@ -126,7 +177,34 @@ const ICON = {
   term:'<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="m16 17 5-5-5-5"/><path d="M21 12H9"/>'
 };
 const VIEW = {sum:summary,notice:sched,hc:hcTab,org:org,leave:leave,term:off};
-const PAL = ['#2563eb','#f59e0b','#10b981','#ef4444','#8b5cf6','#06b6d4','#ec4899','#84cc16','#f97316','#64748b'];
+const PAL = ['#1a5fd8','#3b82f6','#60a5fa','#93c5fd','#7c5cd6','#a78bfa','#34b394','#f59e0b','#ef6b6b','#94a3b8'];
+const FONT = "'Pretendard Variable',Pretendard,-apple-system,'Noto Sans KR',sans-serif";
+/* 그래프 안 숫자 표시 플러그인 */
+const DL={id:'dl',afterDatasetsDraw(ch,_a,o){
+  if(!o||!o.show)return;
+  try{
+    const c=ch.ctx;c.save();c.font='700 12px '+FONT;c.fillStyle=getComputedStyle(document.body).color;
+    ch.data.datasets.forEach((ds,i)=>{const m=ch.getDatasetMeta(i);if(m.hidden)return;
+      m.data.forEach((el,j)=>{const v=ds.data[j];if(v===null||v===undefined||Number.isNaN(v))return;
+        const t=o.fmt?o.fmt(v):String(v);
+        if(el.horizontal!==undefined){
+          if(el.horizontal){c.textBaseline='middle';if(v<0){c.textAlign='right';c.fillText(t,el.x-6,el.y);}else{c.textAlign='left';c.fillText(t,el.x+6,el.y);}}
+          else{c.textAlign='center';c.textBaseline='bottom';c.fillText(t,el.x,el.y-5);}
+        }else{c.textAlign='center';c.textBaseline='bottom';c.fillText(t,el.x,el.y-10);}
+      });});
+    c.restore();
+  }catch(e){}
+}};
+const KI={
+  users:'<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>',
+  briefcase:'<rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>',
+  trend:'<path d="m22 7-8.5 8.5-5-5L2 17"/><path d="M16 7h6v6"/>',
+  userplus:'<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6M22 11h-6"/>',
+  userminus:'<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 11h-6"/>',
+  rotate:'<path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/>',
+  file:'<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M8 13h8M8 17h8"/>'
+};
+const kpi=(ic,label,val,sub,go)=>`<div class="kpi"${go?' data-go="1" style="cursor:pointer"':''}><em><svg viewBox="0 0 24 24">${KI[ic]}</svg></em><div class="kt"><span>${label}</span><b>${val}</b>${sub?`<small>${sub}</small>`:''}</div></div>`;
 let D=null, charts=[];
 const $ = id => document.getElementById(id);
 let goDiv='';
@@ -137,57 +215,111 @@ const esc = s => String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>'
 const uniq = (a,k) => [...new Set(a.map(r=>r[k]).filter(Boolean))];
 const sgn = n => n>0?`<span class="up">+${n}</span>`:n<0?`<span class="dn">${n}</span>`:'0';
 
-async function login(pw){
-  if(!API_URL||API_URL.includes('여기에')){$('err').textContent='웹 앱 주소가 설정되지 않았습니다. index.html의 API_URL에 주소를 넣어주세요.';return;}
-  $('err').textContent='확인 중…';
+let PW='';
+const api=async pw=>{const r=await fetch(API_URL,{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify({password:pw})});return r.json();};
+const unAuto=()=>document.documentElement.classList.remove('auto');
+async function login(pw,auto){
+  if(!API_URL||API_URL.includes('여기에')){unAuto();$('err').textContent='웹 앱 주소가 설정되지 않았습니다. index.html의 API_URL에 주소를 넣어주세요.';return;}
+  $('err').textContent=auto?'':'확인 중…';
+  let got=false;
   try{
-    const r=await fetch(API_URL,{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify({password:pw})});
-    const j=await r.json();
-    if(!j.ok){$('err').textContent=j.error==='locked'?'시도 횟수 초과. 10분 후 다시 시도하세요.':'비밀번호가 올바르지 않습니다.';return;}
-    D=j.data; try{sessionStorage.setItem('pw',pw);}catch(e){}
-    $('login').classList.add('hide');$('app').classList.remove('hide');init();
-  }catch(e){$('err').textContent='서버 연결 오류. 웹 앱 주소(API_URL)와 배포 설정을 확인해 주세요.';}
+    const j=await api(pw);
+    if(!j.ok){
+      if(auto){try{sessionStorage.removeItem('pw');}catch(e){}}
+      unAuto();$('err').textContent=j.error==='locked'?'시도 횟수 초과. 10분 후 다시 시도하세요.':'비밀번호가 올바르지 않습니다.';return;
+    }
+    got=true;D=j.data;PW=pw;try{sessionStorage.setItem('pw',pw);}catch(e){}
+    $('login').classList.add('hide');$('app').classList.remove('hide');init();unAuto();
+  }catch(e){
+    unAuto();
+    $('err').textContent=got?'화면을 그리는 중 오류가 발생했습니다: '+e.message:'서버 연결 오류. 웹 앱 주소(API_URL)와 배포 설정을 확인해 주세요.';
+    if(got){$('login').classList.remove('hide');$('app').classList.add('hide');}
+  }
 }
-$('eye').onclick=()=>{const p=$('pw');p.type=p.type==='password'?'text':'password';};
-$('go').onclick=()=>login($('pw').value);
-$('pw').onkeydown=e=>{if(e.key==='Enter')login($('pw').value);};
-try{const s=sessionStorage.getItem('pw');if(s)login(s);}catch(e){}
-
+function logout(){
+  try{sessionStorage.removeItem('pw');sessionStorage.removeItem('tab');}catch(e){}
+  killCharts();D=null;PW='';
+  $('main').innerHTML='';$('nav').innerHTML='';$('lkm').classList.add('hide');
+  $('app').classList.add('hide');$('login').classList.remove('hide');unAuto();
+  $('pw').value='';$('pw').type='password';$('err').textContent='';
+  window.scrollTo(0,0);$('pw').focus();
+}
+async function reloadData(){
+  const b=$('refresh'),sp=b.querySelector('span'),t0=sp.textContent;b.disabled=true;sp.textContent='불러오는 중…';
+  try{
+    const j=await api(PW);
+    if(j.ok){
+      D=j.data;setMeta();
+      const on=$('nav').querySelector('.on'),y=window.scrollY;
+      if(on){on.click();window.scrollTo(0,y);}
+    }else{alert('다시 불러오지 못했습니다. 다시 로그인해 주세요.');logout();}
+  }catch(e){alert('서버 연결 오류입니다. 잠시 후 다시 시도해 주세요.');}
+  b.disabled=false;sp.textContent=t0;
+}
+function setMeta(){
+  const hc=D['01_HC_Monthly']||[],l=hc[hc.length-1],d=l&&l['갱신일']?l['갱신일']:'-';
+  const cur=latestOrg().reduce((s,r)=>s+num(r['현재 HC']),0);
+  $('upd').textContent=d;
+  $('foot').innerHTML=`<span>마지막 갱신 ${esc(d)}</span><span>현재 재직자 ${cur}명</span>`;
+}
 function init(){
   $('hlogo').src=$('logo').src;
   $('lkm').innerHTML=LINKS.map(x=>`<a href="${x.u}" target="_blank" rel="noopener noreferrer">${esc(x.t)}<small>${esc(x.s)}</small></a>`).join('');
   $('lkb').onclick=e=>{e.stopPropagation();$('lkm').classList.toggle('hide');};
-  document.addEventListener('click',()=>$('lkm').classList.add('hide'));
-  const hc=D['01_HC_Monthly']||[],l=hc[hc.length-1];
-  $('upd').textContent=l&&l['갱신일']?'갱신 '+l['갱신일']:'';
+  if(!window._lkOn){window._lkOn=1;document.addEventListener('click',()=>$('lkm').classList.add('hide'));}
+  setMeta();
   Chart.defaults.color=getComputedStyle(document.body).color;
-  Chart.defaults.font.size=13;
+  Chart.defaults.font.size=13;Chart.defaults.font.family=FONT;
+  Chart.defaults.borderColor=getComputedStyle(document.documentElement).getPropertyValue('--bd').trim()||'#e4e9f2';
+  if(!window._dl){Chart.register(DL);window._dl=1;}
+  let k0='';try{k0=sessionStorage.getItem('tab')||'';}catch(e){}
+  const start=TABS.find(t=>t.k===k0)||TABS[0];
   $('nav').innerHTML='';
-  TABS.forEach((t,i)=>{const b=document.createElement('button');b.dataset.k=t.k;b.innerHTML=`<svg viewBox="0 0 24 24">${ICON[t.k]}</svg><span><b>${t.t}</b><small>${t.e}</small></span>`;b.onclick=()=>show(t,b);$('nav').appendChild(b);if(i===0)show(t,b);});
+  TABS.forEach(t=>{const b=document.createElement('button');b.dataset.k=t.k;b.innerHTML=`<svg class="ic" viewBox="0 0 24 24">${ICON[t.k]}</svg><span class="tx"><b>${t.t}</b><small>${t.e}</small></span><svg class="chev" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg>`;b.onclick=()=>show(t,b);$('nav').appendChild(b);if(t===start)show(t,b);});
 }
 function show(t,b){
   [...$('nav').children].forEach(x=>x.classList.remove('on'));b.classList.add('on');
-  $('pt').innerHTML=`<h1>${t.t}<small>${t.e}</small></h1>`;
+  try{sessionStorage.setItem('tab',t.k);}catch(e){}
+  $('pt').innerHTML=`<div class="eb">${t.e}</div><h1>${t.h}</h1>`;
   killCharts();const m=$('main');m.innerHTML='';
   VIEW[t.k](m);
   window.scrollTo(0,0);
 }
+$('logout').onclick=logout;
+$('refresh').onclick=reloadData;
+$('eye').onclick=()=>{const p=$('pw');p.type=p.type==='password'?'text':'password';};
+$('go').onclick=()=>login($('pw').value);
+$('pw').onkeydown=e=>{if(e.key==='Enter')login($('pw').value);};
+try{const s0=sessionStorage.getItem('pw');if(s0)login(s0,true);}catch(e){}
+
 function killCharts(){charts.forEach(c=>c.destroy());charts=[];}
 function card(m,title,html){const d=document.createElement('div');d.className='card';d.innerHTML=(title?`<h3>${title}</h3>`:'')+(html||'');m.appendChild(d);return d;}
 function latestOrg(){const o=D['02_Organization_HC']||[];const mo=o.map(r=>r['기준월']).filter(Boolean).sort().pop();return mo?o.filter(r=>r['기준월']===mo):o;}
 
-function pie(host,labels,vals){
+function pie(host,labels,vals,unit){
+  unit=unit||'명';
   const cv=host.querySelector('canvas');
-  charts.push(new Chart(cv,{type:'doughnut',data:{labels:labels.map((l,i)=>`${l}  ${vals[i]}명`),datasets:[{data:vals,backgroundColor:PAL,borderWidth:0}]},
-    options:{cutout:'55%',plugins:{legend:{position:'right',labels:{boxWidth:14,font:{size:14}}}}}}));
+  let w=host.querySelector('.pw');
+  if(!w){
+    w=document.createElement('div');w.className='pw';
+    const cw=document.createElement('div');cw.className='pc';
+    cv.parentNode.insertBefore(w,cv);w.appendChild(cw);cw.appendChild(cv);
+    const cn=document.createElement('div');cn.className='pcn';cw.appendChild(cn);
+    const ul=document.createElement('ul');ul.className='pl';w.appendChild(ul);
+  }
+  const tot=vals.reduce((a,b)=>a+b,0);
+  w.querySelector('.pcn').innerHTML=`<b>${tot}</b><span>합계</span>`;
+  w.querySelector('.pl').innerHTML=labels.map((l,i)=>`<li><i style="background:${PAL[i%PAL.length]}"></i><span>${esc(l)}</span><em>${tot?Math.round(vals[i]/tot*100):0}%</em><b>${vals[i]}${unit}</b></li>`).join('');
+  charts.push(new Chart(cv,{type:'doughnut',data:{labels,datasets:[{data:vals,backgroundColor:PAL,borderWidth:3,borderColor:getComputedStyle(document.body).getPropertyValue('--card')||'#fff'}]},
+    options:{responsive:true,maintainAspectRatio:false,cutout:'68%',plugins:{legend:{display:false}}}}));
 }
 function hbar(host,labels,vals,click,colors){
   const cv=host.querySelector('canvas');let w=cv.parentElement;
   if(!w.dataset.hb){w=document.createElement('div');w.dataset.hb='1';w.style.position='relative';cv.parentNode.insertBefore(w,cv);w.appendChild(cv);}
-  w.style.height=Math.max(200,labels.length*30+50)+'px';
-  const o={indexAxis:'y',maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{precision:0}},y:{ticks:{autoSkip:false}}}};
+  w.style.height=Math.max(200,labels.length*34+50)+'px';
+  const o={indexAxis:'y',maintainAspectRatio:false,layout:{padding:{right:44}},plugins:{legend:{display:false},dl:{show:true}},scales:{x:{ticks:{precision:0}},y:{ticks:{autoSkip:false},grid:{display:false}}}};
   if(click){o.onClick=(e,el)=>{if(el.length)click(labels[el[0].index]);};o.onHover=(e,el)=>{e.native.target.style.cursor=el.length?'pointer':'default';};}
-  charts.push(new Chart(cv,{type:'bar',data:{labels,datasets:[{data:vals,backgroundColor:colors||'#2563eb'}]},options:o}));
+  charts.push(new Chart(cv,{type:'bar',data:{labels,datasets:[{data:vals,backgroundColor:colors||'#2563eb',borderRadius:6,barThickness:20}]},options:o}));
 }
 
 /* 퇴사율 / 자발퇴사 계산 */
@@ -219,9 +351,9 @@ function trend(host,title,labels,series,pct){
   const all=series.flatMap(x=>x.data),lo=Math.floor((Math.min(...all)-10)/10)*10;
   const draw=t=>{
     if(ch){ch.destroy();charts=charts.filter(x=>x!==ch);}
-    ch=new Chart(c.querySelector('canvas'),{type:t,data:{labels,datasets:series.map(s=>({label:s.label,data:s.data,borderColor:s.color,backgroundColor:s.color,tension:.3,pointRadius:4,pointHoverRadius:6,borderWidth:t==='line'?3:0}))},
-      options:{layout:{padding:{left:14,right:18,top:8}},plugins:{legend:{display:series.length>1},tooltip:{callbacks:{label:c=>c.dataset.label+': '+c.parsed.y+(pct?'%':'')}}},
-        scales:{x:{offset:true,grid:{display:false},ticks:{padding:8}},y:{beginAtZero:pct||series.length>1,...(!pct&&series.length===1&&t==='bar'?{min:lo}:{}),grace:t==='line'?'10%':0,ticks:pct?{callback:v=>v+'%',padding:10}:{precision:0,padding:10}}}}});
+    ch=new Chart(c.querySelector('canvas'),{type:t,data:{labels,datasets:series.map(s=>({label:s.label,data:s.data,borderColor:s.color,backgroundColor:t==='line'&&series.length===1?s.color+'22':s.color,fill:t==='line'&&series.length===1,tension:.3,pointRadius:5,pointHoverRadius:7,pointBackgroundColor:'#fff',pointBorderColor:s.color,pointBorderWidth:2.5,borderWidth:t==='line'?3:0,borderRadius:6}))},
+      options:{layout:{padding:{left:14,right:22,top:24}},plugins:{legend:{display:series.length>1},tooltip:{callbacks:{label:c=>c.dataset.label+': '+c.parsed.y+(pct?'%':'')}},dl:{show:true,fmt:pct?v=>v+'%':undefined}},
+        scales:{x:{offset:true,grid:{display:false},ticks:{padding:8}},y:{beginAtZero:pct||series.length>1,...(!pct&&series.length===1&&t==='bar'?{min:lo}:{}),grace:t==='line'?'12%':'8%',ticks:pct?{callback:v=>v+'%',padding:10}:{precision:0,padding:10}}}}});
     charts.push(ch);
     c.querySelectorAll('.tg button').forEach(b=>b.classList.toggle('on',b.dataset.t===t));
   };
@@ -234,19 +366,19 @@ function trend(host,title,labels,series,pct){
 function summary(m){
   const org=latestOrg(),hc=D['01_HC_Monthly']||[],l=hc[hc.length-1];
   const cur=org.reduce((s,r)=>s+num(r['현재 HC']),0),prev=org.reduce((s,r)=>s+num(r['전월말 HC']),0),lv=(D['04_Longterm_Leave']||[]).length;
-  m.insertAdjacentHTML('beforeend',`<div class="kpis" style="margin-top:4px">
-   <div class="kpi"><span>현재 재직자수</span><div>${cur}명</div><small>won과 임재환님 제외 / 파견직 포함</small></div>
-   <div class="kpi"><span>실제 근무인원</span><div>${cur-lv}명</div><small>현재 재직자수 − 휴직자 ${lv}명</small></div>
-   <div class="kpi"><span>전월말 대비</span><div>${sgn(cur-prev)}</div><small>전월말 ${prev}명</small></div>
-   ${l?`<div class="kpi"><span>신규입사자</span><div>${esc(l['신규입사자'])}</div></div><div class="kpi"><span>퇴사자</span><div>${esc(l['퇴사자'])}</div><small>말일 퇴사자 미포함</small></div>`:''}</div>`);
+  m.insertAdjacentHTML('beforeend',`<div class="kpis">
+   ${kpi('users','현재 재직자수',cur+'명','won과 임재환님 제외 / 파견직 포함')}
+   ${kpi('briefcase','실제 근무인원',(cur-lv)+'명','현재 재직자수 − 휴직자 '+lv+'명')}
+   ${kpi('trend','전월말 대비',sgn(cur-prev),'전월말 '+prev+'명')}
+   ${l?kpi('userplus','신규입사자',esc(l['신규입사자'])+'명','')+kpi('userminus','퇴사자',esc(l['퇴사자'])+'명','말일 퇴사자 미포함'):''}</div>`);
   const sn=leaveSoon(),up=sn.filter(x=>x.n>=0),od=sn.filter(x=>x.n<0);
   const sc=D['07_Schedule']||[],has=sc.length>0;
   const in30=t=>{const d=dday(t);return d!==null&&d>=0&&d<=30;};
   const c30=k=>sc.filter(x=>x['구분']===k&&in30(x['예정일'])).length;
   const hireAll=has?sc.filter(x=>x['구분']==='입사예정').length:(hk(org)?SC(org,'입사예정자'):0);
   const leaveAll=has?sc.filter(x=>x['구분']==='퇴사예정').length:SC(org,'퇴사예정자');
-  const tile=(t,n,sub)=>`<div class="kpi" data-go="1" style="cursor:pointer"><span>${t}</span><div>${n}명</div><small>${sub}</small></div>`;
-  const al=card(m,'🔔 예정·알림 <small style="color:var(--mu);font-weight:400">(클릭하면 예정·알림 탭으로 이동)</small>',`<div class="kpis" style="margin:0">${tile('복직 예정',up.length,od.length?`30일 이내 · 만료 지남 ${od.length}명`:'30일 이내')}${tile('입사 예정',has?c30('입사예정'):hireAll,has?`30일 이내 · 전체 ${hireAll}명`:'전체 예정 인원')}${tile('퇴사 예정',has?c30('퇴사예정'):leaveAll,has?`30일 이내 · 전체 ${leaveAll}명`:'전체 예정 인원')}${has?tile('계약 만료',c30('계약만료'),'30일 이내 · 계약직·파견직'):''}</div>`);
+  const tile=(ic,t,n,sub)=>kpi(ic,t,n+'명',sub,true);
+  const al=card(m,'🔔 예정·알림 <small style="color:var(--mu);font-weight:400">(클릭하면 예정·알림 탭으로 이동)</small>',`<div class="kpis" style="margin:0">${tile('rotate','복직 예정',up.length,od.length?`30일 이내 · 만료 지남 ${od.length}명`:'30일 이내')}${tile('userplus','입사 예정',has?c30('입사예정'):hireAll,has?`30일 이내 · 전체 ${hireAll}명`:'전체 예정 인원')}${tile('userminus','퇴사 예정',has?c30('퇴사예정'):leaveAll,has?`30일 이내 · 전체 ${leaveAll}명`:'전체 예정 인원')}${has?tile('file','계약 만료',c30('계약만료'),'30일 이내 · 계약직·파견직'):''}</div>`);
   al.querySelectorAll('[data-go]').forEach(x=>x.onclick=()=>goTab('notice'));
   copyCard(m);
   const g=document.createElement('div');g.className='grid';m.appendChild(g);empCard(g);divCard(g,org);
