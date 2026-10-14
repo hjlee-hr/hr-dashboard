@@ -59,6 +59,7 @@ td.wr{white-space:normal;min-width:150px}
 header{flex-wrap:wrap;gap:8px}.hr{display:flex;align-items:center;gap:12px}.lk{position:relative}#lkb{cursor:pointer;font-weight:600}
 #lkm{position:absolute;right:0;top:calc(100% + 6px);background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:6px;min-width:240px;z-index:10;box-shadow:0 10px 30px rgba(0,0,0,.18)}
 #lkm a{display:block;padding:9px 12px;border-radius:8px;color:var(--tx);text-decoration:none;font-size:14px;font-weight:600}#lkm a:hover{background:var(--bg)}#lkm small{display:block;color:var(--mu);font-size:12px;font-weight:400}
+#top{position:sticky;top:0;z-index:30;background:var(--bg);box-shadow:0 2px 10px rgba(0,0,0,.08)}
 </style>
 </head>
 <body>
@@ -72,8 +73,10 @@ header{flex-wrap:wrap;gap:8px}.hr{display:flex;align-items:center;gap:12px}.lk{p
   <p class="note">브라우저 탭을 닫으면 다시 로그인이 필요합니다.</p>
 </div>
 <div id="app" class="hide">
+  <div id="top">
   <header><span class="hb"><img class="logo" id="hlogo" alt="KONG STUDIOS" height="32">콩스튜디오코리아 HR Dashboard</span><div class="hr"><small id="upd"></small><div class="lk"><button type="button" id="lkb">🔗 바로가기 ▾</button><div id="lkm" class="hide"></div></div></div></header>
   <nav id="nav"></nav>
+  </div>
   <main id="main"></main>
 </div>
 <script>
@@ -148,6 +151,22 @@ function hbar(host,labels,vals,click,colors){
   charts.push(new Chart(cv,{type:'bar',data:{labels,datasets:[{data:vals,backgroundColor:colors||'#2563eb'}]},options:o}));
 }
 
+/* 퇴사율 / 자발퇴사 계산 */
+const INVOL=['비자발','권고','해고','징계','계약만료','계약 만료','계약종료','계약 종료','면직','정년'];
+const isVol=w=>{w=String(w||'').trim();if(!w)return null;if(w.includes('비자발'))return false;if(w.includes('자발'))return true;return INVOL.some(k=>w.includes(k))?false:true;};
+const mkey=t=>{const m=String(t||'').match(/(\d{4})\D*(\d{1,2})/);return m?m[1]+'-'+('0'+m[2]).slice(-2):null;};
+function rates(){
+  const h=D['01_HC_Monthly']||[],vc={},tc={};
+  (D['05_Offboarding']||[]).forEach(x=>{const t=pd(x['퇴사일']);if(t===null)return;const d=new Date(t),k=d.getUTCFullYear()+'-'+('0'+(d.getUTCMonth()+1)).slice(-2);tc[k]=(tc[k]||0)+1;if(isVol(x['퇴사사유'])===true)vc[k]=(vc[k]||0)+1;});
+  return h.map(x=>{const e=num(x['월말 재직자수']),p=num(x['전월말 HC']),avg=p?(e+p)/2:e,k=mkey(x['기준월']),o=tc[k]||0,v=vc[k]||0;
+    return{label:x['기준월'],avg,out:o,rate:avg?Math.round(o/avg*1000)/10:0,vol:v,vrate:avg?Math.round(v/avg*1000)/10:0,tent:x['데이터구분']==='잠정'};});
+}
+function reasonNote(){
+  const v=new Set(),n=new Set();
+  (D['05_Offboarding']||[]).forEach(x=>{const w=String(x['퇴사사유']||'').trim();if(!w)return;(isVol(w)?v:n).add(w);});
+  return `자발로 집계한 사유: ${[...v].join(', ')||'없음'} / 비자발로 집계한 사유: ${[...n].join(', ')||'없음'}`;
+}
+
 /* 누적 막대 */
 function stack(host,labels,series){
   charts.push(new Chart(host.querySelector('canvas'),{type:'bar',data:{labels,datasets:series.map((x,i)=>({label:x.label,data:x.data,backgroundColor:PAL[i%PAL.length]}))},
@@ -169,6 +188,7 @@ function trend(host,title,labels,series,pct){
   };
   c.querySelectorAll('.tg button').forEach(b=>b.onclick=()=>draw(b.dataset.t));
   draw('line');
+  return c;
 }
 
 /* 1. 요약 */
@@ -311,11 +331,9 @@ function hcTab(m){
   if(!r.length){card(m,'월별 HC','데이터가 없습니다.');return;}
   const h=D['01_HC_Monthly'];
   trend(m,'월말 재직자 추이',h.map(x=>x['기준월']),[{label:'재직자수',data:h.map(x=>num(x['월말 재직자수'])),color:'#2563eb'}]);
-  const rate=h.map(x=>{const e=num(x['월말 재직자수']),p=num(x['전월말 HC']),avg=p?(e+p)/2:e;return avg?Math.round(num(x['퇴사자'])/avg*1000)/10:0;});
-  trend(m,'월별 퇴사율 <small style="color:var(--mu);font-weight:400">(퇴사자 ÷ 평균 재직자, 평균 = 월말·전월말 평균)</small>',h.map(x=>x['기준월']),[{label:'퇴사율',data:rate,color:'#ef4444'}],true);
-  const e3=(D['03_Employment_Type']||[]).slice(-24);
-  const c3=card(m,'고용형태 월별 추이',e3.length>1?'<canvas height="110"></canvas>':'기록이 1건뿐이라 아직 추이를 그릴 수 없습니다. 갱신 기록이 쌓이면 표시됩니다.');
-  if(e3.length>1)stack(c3,e3.map(x=>x['기준일']),['임원','정규직','계약직','파견직'].map(k=>({label:k,data:e3.map(x=>num(x[k]))})));
+  const R=rates();
+  const rc=trend(m,'월별 퇴사율 <small style="color:var(--mu);font-weight:400">(퇴직면담 시트의 퇴사자 ÷ 평균 재직자, 평균 = 월말·전월말 평균)</small>',R.map(x=>x.label),[{label:'퇴사율',data:R.map(x=>x.rate),color:'#ef4444'},{label:'자발퇴사율',data:R.map(x=>x.vrate),color:'#f59e0b'}],true);
+  rc.insertAdjacentHTML('beforeend',`<p style="color:var(--mu);font-size:12px;margin:10px 0 0">${esc(reasonNote())}<br>퇴사율과 자발퇴사율 모두 퇴직면담 시트의 퇴사일 기준 퇴사자 수로 계산하고, 평균 재직자는 월별 HC 시트(월말·전월말 평균)를 사용합니다.</p>`);
   card(m,'월별 HC (최신순)',`<div class="tw"><table class="ct"><thead><tr>${cols.map(c=>`<th>${c}</th>`).join('')}</tr></thead><tbody>${r.map(x=>`<tr${x['데이터구분']==='잠정'?' class="pend"':''}>`+cols.map(c=>c==='전월대비'?`<td>${sgn(num(x[c]))}</td>`:c==='데이터구분'?`<td><span class="pill ${x[c]==='잠정'?'w':'g'}">${x[c]==='잠정'?'잠정(미정)':esc(x[c])}</span></td>`:`<td>${esc(x[c])}</td>`).join('')+'</tr>').join('')}</tbody></table></div><small style="color:var(--mu)">말일 퇴사자는 재직자수에 포함 / 파견직 포함<br>잠정(미정)은 월말 확정 전 수치입니다.</small>`);
 }
 
@@ -335,6 +353,8 @@ function tbl(r,cols,idx){
 /* 6. 퇴사 */
 function off(m){
   const all=D['05_Offboarding']||[];
+  const R=rates(),L=R[R.length-1];
+  if(L)card(m,'',`<div style="display:flex;flex-wrap:wrap;gap:4px 16px;align-items:baseline"><b>📉 최근 월 퇴사율</b><span style="font-size:26px;font-weight:800">${L.rate}%</span><span style="color:var(--mu)">${esc(L.label)}${L.tent?' (잠정)':''} · 퇴사 ${L.out}명 ÷ 평균 재직자 ${Math.round(L.avg*10)/10}명 · 자발퇴사율 ${L.vrate}%</span></div>`);
   const F=[['연도','연도'],['퇴사월','퇴사월'],['소속','소속'],['퇴사사유','퇴사사유']];
   card(m,'',`<div class="bar">${F.map(([k,t])=>`<select data-k="${k}"><option value="">${t} 전체</option>${uniq(all,k).sort().map(x=>`<option>${esc(x)}</option>`).join('')}</select>`).join('')}<input id="fn" placeholder="성명 검색"><a class="btn" href="${DETAIL_URL}" target="_blank" rel="noopener">상세 사유 보기 ↗</a></div>`);
   const g=document.createElement('div');g.className='grid';
