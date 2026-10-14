@@ -53,6 +53,7 @@ td.n,th.n{text-align:right}.hide{display:none}
 #login .note{margin:14px 0 0;font-size:12px;color:var(--mu)}
 td.wr{white-space:normal;min-width:150px}
 .pill.g{background:#d1fae5;color:#065f46}tr.pend td{background:rgba(245,158,11,.14)}
+.tg{margin-left:10px;font-size:13px;font-weight:400}.tg button{padding:3px 11px;font-size:13px;cursor:pointer;margin-right:4px}.tg button.on{background:var(--ac);color:#fff;border-color:var(--ac)}
 .c{text-align:center}.sep{border-left:3px solid var(--ac)!important}th.grp{text-align:center;font-weight:800;color:var(--tx);background:var(--bg)}.ct th,.ct td{text-align:center}
 .pill{padding:2px 9px;border-radius:99px;font-size:12px;font-weight:700}.pill.w{background:#fef3c7;color:#92400e}.pill.r{background:#fee2e2;color:#991b1b}
 </style>
@@ -136,6 +137,22 @@ function hbar(host,labels,vals,click){
   charts.push(new Chart(cv,{type:'bar',data:{labels,datasets:[{data:vals,backgroundColor:'#2563eb'}]},options:o}));
 }
 
+/* 추이 그래프 (꺾은선 ↔ 막대 전환) */
+function trend(host,title,labels,series){
+  const c=card(host,`${title} <span class="tg"><button type="button" data-t="line">꺾은선</button><button type="button" data-t="bar">막대</button></span>`,'<canvas height="110"></canvas>');
+  let ch=null;
+  const draw=t=>{
+    if(ch){ch.destroy();charts=charts.filter(x=>x!==ch);}
+    ch=new Chart(c.querySelector('canvas'),{type:t,data:{labels,datasets:series.map(s=>({label:s.label,data:s.data,borderColor:s.color,backgroundColor:s.color,tension:.3,pointRadius:4,pointHoverRadius:6,borderWidth:t==='line'?3:0}))},
+      options:{layout:{padding:{left:14,right:18,top:8}},plugins:{legend:{display:series.length>1}},
+        scales:{x:{offset:true,grid:{display:false},ticks:{padding:8}},y:{beginAtZero:t==='bar'||series.length>1,grace:t==='line'?'10%':0,ticks:{precision:0,padding:10}}}}});
+    charts.push(ch);
+    c.querySelectorAll('.tg button').forEach(b=>b.classList.toggle('on',b.dataset.t===t));
+  };
+  c.querySelectorAll('.tg button').forEach(b=>b.onclick=()=>draw(b.dataset.t));
+  draw('line');
+}
+
 /* 1. 요약 */
 function summary(m){
   const org=latestOrg(),hc=D['01_HC_Monthly']||[],l=hc[hc.length-1];
@@ -156,10 +173,9 @@ function summary(m){
    ${l?`<div class="kpi"><span>신규입사자</span><div>${esc(l['신규입사자'])}</div></div><div class="kpi"><span>퇴사자</span><div>${esc(l['퇴사자'])}</div><small>말일 퇴사자 미포함</small></div>`:''}</div>`);
   const g=document.createElement('div');g.className='grid';m.appendChild(g);empCard(g);divCard(g,org);
   if(!hc.length)return;
-  const a=card(m,'월말 재직자 추이','<canvas height="110"></canvas>');
-  charts.push(new Chart(a.querySelector('canvas'),{type:'line',data:{labels:hc.map(r=>r['기준월']),datasets:[{label:'재직자수',data:hc.map(r=>num(r['월말 재직자수'])),borderColor:'#2563eb',backgroundColor:'#2563eb',tension:.3}]},options:{plugins:{legend:{display:false}}}}));
-  const b=card(m,'월별 입사·퇴사','<canvas height="110"></canvas>');
-  charts.push(new Chart(b.querySelector('canvas'),{type:'bar',data:{labels:hc.map(r=>r['기준월']),datasets:[{label:'입사',data:hc.map(r=>num(r['신규입사자'])),backgroundColor:'#2563eb'},{label:'퇴사',data:hc.map(r=>num(r['퇴사자'])),backgroundColor:'#ef4444'}]}}));
+  const lb=hc.map(r=>r['기준월']);
+  trend(m,'월말 재직자 추이',lb,[{label:'재직자수',data:hc.map(r=>num(r['월말 재직자수'])),color:'#2563eb'}]);
+  trend(m,'월별 입사·퇴사',lb,[{label:'입사',data:hc.map(r=>num(r['신규입사자'])),color:'#2563eb'},{label:'퇴사',data:hc.map(r=>num(r['퇴사자'])),color:'#ef4444'}]);
 }
 
 /* 날짜 / D-Day (열 때마다 오늘 기준으로 계산) */
@@ -209,8 +225,8 @@ function copyCard(m){
    `• 실제 근무인원 ${cur-lv}명 (휴직 ${lv}명 제외)`,
    e?`• 고용형태: 임원 ${num(e['임원'])} / 정규직 ${num(e['정규직'])} / 계약직 ${num(e['계약직'])} / 파견직 ${num(e['파견직'])}`:'',
    l['신규입사자']!==undefined?`• 당월 입사 ${l['신규입사자']}명 / 퇴사 ${l['퇴사자']}명 (말일 퇴사자 미포함)`:'',
-   `• 입사 예정 ${hk(org)?SC(org,'입사예정자'):0}명 / 퇴사 예정 ${ex}명 / 30일 내 복직 예정 ${soon}명`].filter(Boolean).join('\n');
-  card(m,'월간 요약 문구 (Slack 보고용)','<textarea id="cp" rows="7" style="width:100%;font:inherit;padding:10px;border-radius:8px;border:1px solid var(--bd);background:var(--card);color:var(--tx)"></textarea><div class="bar" style="margin:10px 0 0"><button class="p" id="cpb" type="button">문구 복사</button><small id="cpm" style="color:var(--mu)"></small></div>');
+   `• 입사 예정 ${hk(org)?SC(org,'입사예정자'):0}명 / 퇴사 예정 ${ex}명`].filter(Boolean).join('\n');
+  card(m,'일간 요약 문구','<textarea id="cp" rows="7" style="width:100%;font:inherit;padding:10px;border-radius:8px;border:1px solid var(--bd);background:var(--card);color:var(--tx)"></textarea><div class="bar" style="margin:10px 0 0"><button class="p" id="cpb" type="button">문구 복사</button><small id="cpm" style="color:var(--mu)"></small></div>');
   $('cp').value=txt;
   $('cpb').onclick=async()=>{try{await navigator.clipboard.writeText($('cp').value);}catch(x){$('cp').select();document.execCommand('copy');}$('cpm').textContent='복사되었습니다. Slack에 붙여넣기 하세요.';};
 }
@@ -267,8 +283,8 @@ function hcTab(m){
   const r=[...(D['01_HC_Monthly']||[])].reverse();
   const cols=['기준월','데이터구분','월말 재직자수','신규입사자','퇴사자','전월말 HC','전월대비','갱신일'];
   if(!r.length){card(m,'월별 HC','데이터가 없습니다.');return;}
-  const t=card(m,'월말 재직자 추이','<canvas height="110"></canvas>'),h=D['01_HC_Monthly'];
-  charts.push(new Chart(t.querySelector('canvas'),{type:'line',data:{labels:h.map(x=>x['기준월']),datasets:[{label:'재직자수',data:h.map(x=>num(x['월말 재직자수'])),borderColor:'#2563eb',backgroundColor:'#2563eb',tension:.3}]},options:{plugins:{legend:{display:false}}}}));
+  const h=D['01_HC_Monthly'];
+  trend(m,'월말 재직자 추이',h.map(x=>x['기준월']),[{label:'재직자수',data:h.map(x=>num(x['월말 재직자수'])),color:'#2563eb'}]);
   card(m,'월별 HC (최신순)',`<div class="tw"><table class="ct"><thead><tr>${cols.map(c=>`<th>${c}</th>`).join('')}</tr></thead><tbody>${r.map(x=>`<tr${x['데이터구분']==='잠정'?' class="pend"':''}>`+cols.map(c=>c==='전월대비'?`<td>${sgn(num(x[c]))}</td>`:c==='데이터구분'?`<td><span class="pill ${x[c]==='잠정'?'w':'g'}">${x[c]==='잠정'?'잠정(미정)':esc(x[c])}</span></td>`:`<td>${esc(x[c])}</td>`).join('')+'</tr>').join('')}</tbody></table></div><small style="color:var(--mu)">말일 퇴사자는 재직자수에 포함 / 파견직 포함<br>잠정(미정)은 월말 확정 전 수치입니다.</small>`);
 }
 
