@@ -9,10 +9,10 @@
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <style>
-:root{--bg:#f6f8fc;--card:#fff;--tx:#161e2e;--mu:#6a7488;--ac:#2563eb;--acs:#eaf1ff;--bd:#e4e9f2;--up:#0a8f63;--dn:#dc3545}
-@media(prefers-color-scheme:dark){:root{--bg:#0c111b;--card:#151b27;--tx:#eef1f7;--mu:#a3adc2;--ac:#6ea0ff;--acs:#1b2740;--bd:#2a3347;--up:#34d399;--dn:#fb7185}}
+:root{--bg:#f2f4f6;--card:#fff;--tx:#191f28;--mu:#8b95a1;--ac:#2f80ff;--acs:#eaf2ff;--bd:#e5e8eb;--up:#4e5968;--dn:#f04452}
+@media(prefers-color-scheme:dark){:root{--bg:#101318;--card:#1a1e26;--tx:#f2f4f6;--mu:#9aa4b2;--ac:#5b9dff;--acs:#1c2a44;--bd:#2c323c;--up:#c4cbd6;--dn:#ff6b78}}
 *{box-sizing:border-box}
-body{margin:0;font:15px/1.55 'Pretendard Variable',Pretendard,-apple-system,'Noto Sans KR','Malgun Gothic',sans-serif;background:var(--bg);color:var(--tx);-webkit-font-smoothing:antialiased}
+body{margin:0;font:14px/1.55 'Pretendard Variable',Pretendard,-apple-system,'Noto Sans KR','Malgun Gothic',sans-serif;background:var(--bg);color:var(--tx);-webkit-font-smoothing:antialiased}
 input,select,button,a.btn{font:inherit;padding:9px 12px;border-radius:10px;border:1px solid var(--bd);background:var(--card);color:var(--tx)}
 button.p,a.btn{background:var(--ac);color:#fff;border:0;cursor:pointer;text-decoration:none;display:inline-block;font-weight:600}
 @media(prefers-color-scheme:dark){button.p,a.btn{color:#0b0f17}}
@@ -36,52 +36,52 @@ button.p,a.btn{background:var(--ac);color:#fff;border:0;cursor:pointer;text-deco
 /* 상단 바 */
 #app:not(.hide){display:block;min-height:100vh}
 #topbar{position:sticky;top:0;z-index:50;height:64px;display:flex;align-items:center;justify-content:space-between;padding:0 24px;background:var(--card);border-bottom:1px solid var(--bd)}
-.tl{display:flex;align-items:center;gap:14px}.tl .logo{height:38px}
-.tt b{display:block;font-size:19px;font-weight:800;line-height:1.2}.tt span{font-size:13px;color:var(--mu)}
+.tl{display:flex;align-items:center;gap:14px}.tl .logo{height:34px}
+.tt b{display:block;font-size:17px;font-weight:800;line-height:1.2}.tt span{font-size:12px;color:var(--mu)}
 .trr{display:flex;gap:10px}
-.ob{display:inline-flex;align-items:center;gap:8px;padding:10px 16px;border-radius:12px;font-weight:600;cursor:pointer}
+.ob{display:inline-flex;align-items:center;gap:8px;padding:8px 14px;border-radius:12px;font-weight:600;font-size:13.5px;cursor:pointer}
 .ob svg{width:17px;height:17px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 .ob:disabled{opacity:.6;cursor:wait}
 /* 사이드바 */
 #body{display:flex;align-items:flex-start}
-#side{width:300px;flex:none;position:sticky;top:64px;height:calc(100vh - 100px);overflow-y:auto;background:var(--card);border-right:1px solid var(--bd);padding:34px 22px 40px}
-.se{color:var(--ac);font-weight:800;font-size:12px;letter-spacing:.14em}
-.sh{font-size:28px;font-weight:800;margin:4px 0 22px;letter-spacing:-.02em}
-#nav{display:flex;flex-direction:column;gap:12px}
-#nav button{display:flex;align-items:center;gap:14px;width:100%;text-align:left;background:var(--card);border:1px solid var(--bd);padding:16px;border-radius:16px;cursor:pointer;color:var(--tx)}
-#nav button:hover{border-color:#a9c6ff}
+#side{width:262px;flex:none;position:sticky;top:64px;height:calc(100vh - 100px);overflow-y:auto;background:var(--card);border-right:1px solid var(--bd);padding:26px 16px 40px}
+.se{color:var(--ac);font-weight:800;font-size:11px;letter-spacing:.14em}
+.sh{font-size:22px;font-weight:800;margin:2px 0 18px;letter-spacing:-.02em}
+#nav{display:flex;flex-direction:column;gap:4px}
+#nav button{display:flex;align-items:center;gap:14px;width:100%;text-align:left;background:transparent;border:0;padding:12px 14px;border-radius:12px;cursor:pointer;color:var(--tx)}
+#nav button:hover{background:var(--bg)}
 #nav button svg{fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round;flex:none}
 #nav button .ic{width:22px;height:22px}#nav button .chev{width:16px;height:16px;color:var(--mu)}
 #nav button .tx{flex:1;min-width:0}
-#nav button b{display:block;font-size:15.5px;font-weight:700;line-height:1.25}
-#nav button small{display:block;font-size:11.5px;color:var(--mu);font-weight:500;margin-top:2px}
-#nav button.on{background:var(--acs);border-color:#a9c6ff;color:var(--ac)}
+#nav button b{display:block;font-size:14.5px;font-weight:700;line-height:1.25}
+#nav button small{display:block;font-size:11px;color:var(--mu);font-weight:500;margin-top:2px}
+#nav button.on{background:var(--acs);color:var(--ac)}
 #nav button.on small,#nav button.on .chev{color:var(--ac)}
 /* 본문 */
 #content{flex:1;min-width:0;padding-bottom:70px}
-#ph{display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:14px;padding:44px 40px 18px;max-width:1280px;margin:0 auto;position:relative;z-index:30}
-.eb{color:var(--ac);font-weight:800;font-size:12.5px;letter-spacing:.14em;text-transform:uppercase}
-#ph h1{margin:6px 0 0;font-size:40px;font-weight:800;letter-spacing:-.025em;line-height:1.2}
+#ph{display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:14px;padding:26px 32px 14px;max-width:1280px;margin:0 auto;position:relative;z-index:30}
+.eb{color:var(--ac);font-weight:800;font-size:11.5px;letter-spacing:.14em;text-transform:uppercase}
+#ph h1{margin:3px 0 0;font-size:28px;font-weight:800;letter-spacing:-.025em;line-height:1.2}
 .pr{display:flex;align-items:center;gap:12px}
-.asof{display:flex;align-items:center;gap:10px;background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:10px 16px}
+.asof{display:flex;align-items:center;gap:10px;background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:7px 14px}
 .asof svg{width:20px;height:20px;stroke:var(--mu);fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
-.asof small{display:block;font-size:11px;color:var(--mu);line-height:1.2}.asof b{font-size:14px;line-height:1.3}
+.asof small{display:block;font-size:11px;color:var(--mu);line-height:1.2}.asof b{font-size:13px;line-height:1.3}
 .lk{position:relative}
-#lkb{background:var(--ac);color:#fff;border:0;border-radius:14px;padding:15px 22px;font-weight:700;cursor:pointer;box-shadow:0 6px 16px rgba(37,99,235,.25)}
+#lkb{background:var(--ac);color:#fff;border:0;border-radius:14px;padding:12px 18px;font-size:13.5px;font-weight:700;cursor:pointer;box-shadow:0 6px 16px rgba(37,99,235,.25)}
 @media(prefers-color-scheme:dark){#lkb{color:#0b0f17}}
 #lkm{position:absolute;right:0;top:calc(100% + 8px);background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:6px;min-width:260px;z-index:60;box-shadow:0 14px 34px rgba(0,0,0,.2)}
 #lkm a{display:block;padding:10px 12px;border-radius:10px;color:var(--tx);text-decoration:none;font-size:14px;font-weight:600}#lkm a:hover{background:var(--bg)}#lkm small{display:block;color:var(--mu);font-size:12px;font-weight:400}
-#content main{max-width:1280px;margin:0 auto;padding:0 40px 24px}
+#content main{max-width:1280px;margin:0 auto;padding:0 32px 24px}
 #foot{position:fixed;left:0;right:0;bottom:0;height:36px;background:var(--card);border-top:1px solid var(--bd);display:flex;justify-content:flex-end;align-items:center;gap:20px;padding:0 24px;font-size:12px;color:var(--mu);z-index:45}
 .stk{position:sticky;top:64px;z-index:20;background:var(--bg);padding-top:6px;box-shadow:0 8px 8px -8px rgba(0,0,0,.18)}.stk .card{margin-bottom:8px}
 /* 카드 · 표 */
-.card{background:var(--card);border:1px solid var(--bd);border-radius:22px;padding:26px 28px;margin-bottom:18px}
-.card h3{margin:0 0 16px;font-size:20px;font-weight:800;letter-spacing:-.01em}
-.card h3 small{font-size:13px}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:20px;padding:22px 24px;margin-bottom:16px}
+.card h3{margin:0 0 6px;font-size:16px;font-weight:800;letter-spacing:-.01em}
+.card h3 small{font-size:12px}
 .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:18px}.grid>.card{margin-bottom:0}
 .bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:12px}
-.tw{overflow-x:auto}table{border-collapse:collapse;width:100%;font-size:14px}
-th,td{padding:11px 12px;border-bottom:1px solid var(--bd);text-align:left;white-space:nowrap}
+.tw{overflow-x:auto}table{border-collapse:collapse;width:100%;font-size:13.5px}
+th,td{padding:9px 10px;border-bottom:1px solid var(--bd);text-align:left;white-space:nowrap}
 th{color:var(--mu);font-weight:600;background:var(--bg)}
 tr.tot td{font-weight:800;background:var(--bg);border-bottom:2px solid var(--bd)}
 tr.div td{font-weight:800;cursor:pointer;background:var(--bg)}
@@ -89,28 +89,36 @@ td.n,th.n{text-align:right}td.wr{white-space:normal;min-width:150px}
 .c{text-align:center}.sep{border-left:2px solid var(--bd)!important}th.grp{text-align:center;font-weight:800;color:var(--tx);background:var(--bg)}.ct th,.ct td{text-align:center}
 tr td.g2,tr th.g2{background:rgba(100,116,139,.09)!important}
 .up{color:var(--up)}.dn{color:var(--dn)}
-.pill{padding:2px 9px;border-radius:99px;font-size:12px;font-weight:700}.pill.w{background:#fef3c7;color:#92400e}.pill.r{background:#fee2e2;color:#991b1b}.pill.g{background:#d1fae5;color:#065f46}
-tr.pend td{background:rgba(245,158,11,.14)}
+.pill{padding:2px 9px;border-radius:99px;font-size:12px;font-weight:700}.pill.w{background:var(--acs);color:var(--ac)}.pill.r{background:#ffe9eb;color:#d9303e}.pill.g{background:var(--bg);color:#4e5968}
+@media(prefers-color-scheme:dark){.pill.r{background:#3a1d22;color:#ff8a94}.pill.g{color:#c4cbd6}}
+tr.pend td{background:rgba(139,149,161,.12)}
 .tg{margin-left:10px;font-size:13px;font-weight:400}.tg button{padding:3px 11px;font-size:13px;cursor:pointer;margin-right:4px}.tg button.on{background:var(--ac);color:#fff;border-color:var(--ac)}
 /* KPI 카드 */
-.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(205px,1fr));gap:16px;margin-bottom:18px}
-.kpi{display:flex;align-items:center;gap:16px;background:var(--card);border:1px solid var(--bd);border-radius:22px;padding:24px 26px}
-.kpi em{width:44px;height:44px;flex:none;color:var(--ac);display:flex;align-items:center;justify-content:center}
-.kpi em svg{width:30px;height:30px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
-.kt{min-width:0}.kt>span{display:block;color:var(--mu);font-size:14.5px;font-weight:500}
-.kt>b{display:block;font-size:40px;font-weight:800;line-height:1.15;margin:2px 0;letter-spacing:-.02em}
-.kt>small{display:block;color:var(--mu);font-size:12px}
-.card .kpi{background:var(--bg);border-radius:18px;padding:20px 22px}
+.kpis{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);gap:12px;margin-bottom:16px}
+.kpi{display:flex;align-items:center;gap:12px;background:var(--card);border:1px solid var(--bd);border-radius:16px;padding:16px 18px}
+.kpi em{width:34px;height:34px;flex:none;color:var(--ac);display:flex;align-items:center;justify-content:center}
+.kpi em svg{width:24px;height:24px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.kt{min-width:0}.kt>span{display:block;color:var(--mu);font-size:13px;font-weight:500}
+.kt>b{display:block;font-size:32px;font-weight:800;line-height:1.15;margin:1px 0;letter-spacing:-.02em}
+.kt>small{display:block;color:var(--mu);font-size:11.5px;line-height:1.35}
+.card .kpi{background:var(--bg);border-radius:14px;padding:14px 16px}
 /* 도넛 + 범례 */
 .pw{display:flex;align-items:center;justify-content:center;gap:28px;flex-wrap:wrap}
-.pc{position:relative;width:210px;height:210px;flex:none}
+.pc{position:relative;width:190px;height:190px;flex:none}
 .pcn{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none}
-.pcn b{font-size:34px;font-weight:800;line-height:1.1}.pcn span{font-size:12px;color:var(--mu)}
+.pcn b{font-size:28px;font-weight:800;line-height:1.1}.pcn span{font-size:12px;color:var(--mu)}
 .pl{list-style:none;margin:0;padding:0;flex:1;min-width:230px}
-.pl li{display:flex;align-items:center;gap:10px;padding:5px 0;font-size:14px}
+.pl li{display:flex;align-items:center;gap:10px;padding:4px 0;font-size:13px}
 .pl i{width:10px;height:10px;border-radius:50%;flex:none}
 .pl span{flex:1;font-weight:600}.pl em{font-style:normal;color:var(--mu);width:46px;text-align:right}.pl b{width:56px;text-align:right}
+.cd{margin:0 0 14px;color:var(--mu);font-size:12.5px}
+.cv{position:relative;height:260px}
+.opt{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;color:var(--mu);margin:0 0 6px;cursor:pointer}.opt input{padding:0;width:auto}.opt small{font-size:11.5px}
+.eb100{display:flex;align-items:center;gap:28px;flex-wrap:wrap}
+.sgw{flex:1;min-width:280px;display:flex;height:46px;border-radius:12px;overflow:hidden;background:var(--bg)}
+.sg{display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;min-width:0;overflow:hidden}
 /* 반응형 */
+@media(max-width:1100px){.kpis{grid-auto-flow:row;grid-template-columns:repeat(auto-fit,minmax(190px,1fr))}}
 @media(max-width:860px){
   #body{flex-direction:column}
   #side{position:static;width:100%;height:auto;padding:12px;border-right:0;border-bottom:1px solid var(--bd)}
@@ -118,7 +126,7 @@ tr.pend td{background:rgba(245,158,11,.14)}
   #nav{flex-direction:row;overflow-x:auto;gap:8px}
   #nav button{width:auto;white-space:nowrap;padding:10px 14px}#nav button small,#nav button .chev{display:none}
   #topbar{padding:0 12px}.ob span{display:none}.tt span{display:none}
-  #ph{padding:22px 16px 12px}#ph h1{font-size:28px}#content main{padding:0 16px 24px}
+  #ph{padding:20px 16px 12px}#ph h1{font-size:24px}#content main{padding:0 16px 24px}
   .stk{top:64px}
 }
 </style>
@@ -177,20 +185,27 @@ const ICON = {
   term:'<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="m16 17 5-5-5-5"/><path d="M21 12H9"/>'
 };
 const VIEW = {sum:summary,notice:sched,hc:hcTab,org:org,leave:leave,term:off};
-const PAL = ['#1a5fd8','#3b82f6','#60a5fa','#93c5fd','#7c5cd6','#a78bfa','#34b394','#f59e0b','#ef6b6b','#94a3b8'];
+const ACC = '#2f80ff', RED = '#f04452', GRAY = '#8b95a1';
+const PAL = ['#2f80ff','#16347a','#8db9ff','#64748b','#c7d2e3','#4a6fd0','#b7d0ff','#2b3a55','#94a3b8','#dce6f7'];
 const FONT = "'Pretendard Variable',Pretendard,-apple-system,'Noto Sans KR',sans-serif";
 /* 그래프 안 숫자 표시 플러그인 */
 const DL={id:'dl',afterDatasetsDraw(ch,_a,o){
   if(!o||!o.show)return;
   try{
-    const c=ch.ctx;c.save();c.font='700 12px '+FONT;c.fillStyle=getComputedStyle(document.body).color;
-    ch.data.datasets.forEach((ds,i)=>{const m=ch.getDatasetMeta(i);if(m.hidden)return;
+    const c=ch.ctx,base=getComputedStyle(document.body).color;c.save();c.font='700 12px '+FONT;
+    ch.data.datasets.forEach((ds,i)=>{const m=ch.getDatasetMeta(i);if(ch.isDatasetVisible&&!ch.isDatasetVisible(i))return;
       m.data.forEach((el,j)=>{const v=ds.data[j];if(v===null||v===undefined||Number.isNaN(v))return;
         const t=o.fmt?o.fmt(v):String(v);
         if(el.horizontal!==undefined){
+          c.fillStyle=base;
           if(el.horizontal){c.textBaseline='middle';if(v<0){c.textAlign='right';c.fillText(t,el.x-6,el.y);}else{c.textAlign='left';c.fillText(t,el.x+6,el.y);}}
           else{c.textAlign='center';c.textBaseline='bottom';c.fillText(t,el.x,el.y-5);}
-        }else{c.textAlign='center';c.textBaseline='bottom';c.fillText(t,el.x,el.y-10);}
+        }else{
+          /* 선 그래프: 첫 번째 선은 점 위, 두 번째 선은 점 아래에 표시하고 선 색과 같은 색으로 써서 겹침을 줄임 */
+          const up=(i%2===0);
+          c.fillStyle=ds.borderColor||base;c.textAlign='center';c.textBaseline=up?'bottom':'top';
+          c.fillText(t,el.x,up?el.y-10:el.y+10);
+        }
       });});
     c.restore();
   }catch(e){}
@@ -319,7 +334,7 @@ function hbar(host,labels,vals,click,colors){
   w.style.height=Math.max(200,labels.length*34+50)+'px';
   const o={indexAxis:'y',maintainAspectRatio:false,layout:{padding:{right:44}},plugins:{legend:{display:false},dl:{show:true}},scales:{x:{ticks:{precision:0}},y:{ticks:{autoSkip:false},grid:{display:false}}}};
   if(click){o.onClick=(e,el)=>{if(el.length)click(labels[el[0].index]);};o.onHover=(e,el)=>{e.native.target.style.cursor=el.length?'pointer':'default';};}
-  charts.push(new Chart(cv,{type:'bar',data:{labels,datasets:[{data:vals,backgroundColor:colors||'#2563eb',borderRadius:6,barThickness:20}]},options:o}));
+  charts.push(new Chart(cv,{type:'bar',data:{labels,datasets:[{data:vals,backgroundColor:colors||ACC,borderRadius:6,barThickness:20}]},options:o}));
 }
 
 /* 퇴사율 / 자발퇴사 계산 */
@@ -344,6 +359,46 @@ function stack(host,labels,series){
     options:{layout:{padding:{left:14,right:18}},scales:{x:{stacked:true,offset:true,grid:{display:false}},y:{stacked:true,ticks:{precision:0}}},plugins:{legend:{position:'bottom'}}}}));
 }
 
+/* 요약 A: 월말 재직자 추이 (선그래프) */
+const ACTIVE_FROM='2026-10';
+function chartA(m,h,act){
+  const c=card(m,'월말 재직자 추이','<p class="cd">월별 마감 인원 · 인원 감소가 이어지는지, 특정 월에 급격한 변화가 있었는지 확인합니다.</p><label class="opt"><input type="checkbox" id="optA"> 실근무인원 표시 <small>(2026-10부터 집계)</small></label><div class="cv"><canvas></canvas></div>');
+  const lb=h.map(x=>x['기준월']),v=h.map(x=>num(x['월말 재직자수'])),pv=h.map(x=>num(x['전월말 HC'])),hist={};
+  (D['08_ActiveHC']||[]).forEach(r=>{const k=mkey(r['기준월']);if(k&&k>=ACTIVE_FROM)hist[k]=num(r['실근무인원']);});
+  const a2=h.map((x,i)=>{const k=mkey(x['기준월']);if(!k||k<ACTIVE_FROM)return null;if(hist[k]!==undefined)return hist[k];return i===h.length-1?act:null;});
+  const ch=new Chart(c.querySelector('canvas'),{type:'line',data:{labels:lb,datasets:[
+    {label:'월말 재직자',data:v,borderColor:ACC,backgroundColor:'rgba(47,128,255,.10)',fill:true,tension:.3,pointRadius:5,pointHoverRadius:7,pointBackgroundColor:'#fff',pointBorderColor:ACC,pointBorderWidth:2.5,borderWidth:3},
+    {label:'실근무인원',data:a2,borderColor:'#4e5968',backgroundColor:'#4e5968',showLine:false,pointRadius:6,pointHoverRadius:8,hidden:true}]},
+    options:{maintainAspectRatio:false,interaction:{mode:'index',intersect:false},layout:{padding:{left:10,right:20,top:24,bottom:8}},
+      plugins:{legend:{display:false},dl:{show:true},tooltip:{callbacks:{
+        label:x=>x.parsed.y===null?'':`${x.dataset.label}: ${x.parsed.y}명`,
+        afterLabel:x=>{if(x.datasetIndex!==0)return '';const p=pv[x.dataIndex];if(!p)return '';const d=x.parsed.y-p;return `전월 대비 ${d>0?'+':d<0?'−':''}${Math.abs(d)}명 (전월말 ${p}명)`;}}}},
+      scales:{x:{offset:true,grid:{display:false},ticks:{padding:8}},y:{grace:'12%',ticks:{precision:0,padding:10}}}}});
+  charts.push(ch);
+  $('optA').onchange=e=>{ch.setDatasetVisibility(1,e.target.checked);ch.update();};
+}
+
+/* 요약 B: 월별 입사·퇴사 (그룹형 막대) */
+function chartB(m,h){
+  const c=card(m,'월별 입사·퇴사','<p class="cd">월별 입사자와 퇴사자 비교 · 입퇴사 격차, 퇴사가 몰린 달, 채용으로 보충되는지 확인합니다.</p><div class="cv"><canvas></canvas></div>');
+  const lb=h.map(x=>x['기준월']),i=h.map(x=>num(x['신규입사자'])),o=h.map(x=>num(x['퇴사자']));
+  charts.push(new Chart(c.querySelector('canvas'),{type:'bar',data:{labels:lb,datasets:[
+    {label:'입사자',data:i,backgroundColor:ACC,borderRadius:6,maxBarThickness:28},
+    {label:'퇴사자',data:o,backgroundColor:RED,borderRadius:6,maxBarThickness:28}]},
+    options:{maintainAspectRatio:false,layout:{padding:{top:22,right:14}},interaction:{mode:'index',intersect:false},
+      plugins:{legend:{position:'top',align:'end'},dl:{show:true},tooltip:{callbacks:{footer:it=>{const k=it[0].dataIndex,d=i[k]-o[k];return `순증감 ${d>0?'+':d<0?'−':''}${Math.abs(d)}명`;}}}},
+      scales:{x:{grid:{display:false}},y:{beginAtZero:true,ticks:{precision:0}}}}}));
+}
+
+/* 요약 C: 월별 인원 변동 상세 (표) */
+function tableC(m,h){
+  const rows=[...h].reverse().map(x=>{
+    const b=num(x['전월말 HC']),i=num(x['신규입사자']),o=num(x['퇴사자']),e=num(x['월말 재직자수']),adj=b?e-(b+i-o):null;
+    return `<tr${x['데이터구분']==='잠정'?' class="pend"':''}><td>${esc(x['기준월'])}${x['데이터구분']==='잠정'?' <span class="pill r">잠정</span>':''}</td><td>${b||'-'}</td><td>${i}</td><td>${o}</td><td>${adj===null?'-':adj===0?'0':`<span class="dn">${adj>0?'+':''}${adj}</span>`}</td><td><b>${e}</b></td><td>${b?sgn(e-b):'-'}</td></tr>`;
+  }).join('');
+  card(m,'월별 인원 변동 상세',`<p class="cd">월말 인원 = 월초 인원 + 입사 − 퇴사 + 기타 조정(조직이동 등) · 기타 조정이 0이 아니면 마감 데이터를 확인하세요.</p><div class="tw"><table class="ct"><thead><tr><th>기준월</th><th>월초 인원</th><th>입사</th><th>퇴사</th><th>기타 조정</th><th>월말 인원</th><th>전월 대비</th></tr></thead><tbody>${rows}</tbody></table></div>`);
+}
+
 /* 추이 그래프 (꺾은선 ↔ 막대 전환) */
 function trend(host,title,labels,series,pct){
   const c=card(host,`${title} <span class="tg"><button type="button" data-t="line">꺾은선</button><button type="button" data-t="bar">막대</button></span>`,'<canvas height="110"></canvas>');
@@ -352,7 +407,7 @@ function trend(host,title,labels,series,pct){
   const draw=t=>{
     if(ch){ch.destroy();charts=charts.filter(x=>x!==ch);}
     ch=new Chart(c.querySelector('canvas'),{type:t,data:{labels,datasets:series.map(s=>({label:s.label,data:s.data,borderColor:s.color,backgroundColor:t==='line'&&series.length===1?s.color+'22':s.color,fill:t==='line'&&series.length===1,tension:.3,pointRadius:5,pointHoverRadius:7,pointBackgroundColor:'#fff',pointBorderColor:s.color,pointBorderWidth:2.5,borderWidth:t==='line'?3:0,borderRadius:6}))},
-      options:{layout:{padding:{left:14,right:22,top:24}},plugins:{legend:{display:series.length>1},tooltip:{callbacks:{label:c=>c.dataset.label+': '+c.parsed.y+(pct?'%':'')}},dl:{show:true,fmt:pct?v=>v+'%':undefined}},
+      options:{layout:{padding:{left:14,right:22,top:24,bottom:10}},plugins:{legend:{display:series.length>1},tooltip:{callbacks:{label:c=>c.dataset.label+': '+c.parsed.y+(pct?'%':'')}},dl:{show:true,fmt:pct?v=>v+'%':undefined}},
         scales:{x:{offset:true,grid:{display:false},ticks:{padding:8}},y:{beginAtZero:pct||series.length>1,...(!pct&&series.length===1&&t==='bar'?{min:lo}:{}),grace:t==='line'?'12%':'8%',ticks:pct?{callback:v=>v+'%',padding:10}:{precision:0,padding:10}}}}});
     charts.push(ch);
     c.querySelectorAll('.tg button').forEach(b=>b.classList.toggle('on',b.dataset.t===t));
@@ -381,7 +436,10 @@ function summary(m){
   const al=card(m,'🔔 예정·알림 <small style="color:var(--mu);font-weight:400">(클릭하면 예정·알림 탭으로 이동)</small>',`<div class="kpis" style="margin:0">${tile('rotate','복직 예정',up.length,od.length?`30일 이내 · 만료 지남 ${od.length}명`:'30일 이내')}${tile('userplus','입사 예정',has?c30('입사예정'):hireAll,has?`30일 이내 · 전체 ${hireAll}명`:'전체 예정 인원')}${tile('userminus','퇴사 예정',has?c30('퇴사예정'):leaveAll,has?`30일 이내 · 전체 ${leaveAll}명`:'전체 예정 인원')}${has?tile('file','계약 만료',c30('계약만료'),'30일 이내 · 계약직·파견직'):''}</div>`);
   al.querySelectorAll('[data-go]').forEach(x=>x.onclick=()=>goTab('notice'));
   copyCard(m);
-  const g=document.createElement('div');g.className='grid';m.appendChild(g);empCard(g);divCard(g,org);
+  const h=hc;
+  if(h.length){chartA(m,h,cur-lv);chartB(m,h);tableC(m,h);}
+  divCard(m,org);
+  empCard(m);
 }
 
 /* 날짜 / D-Day (열 때마다 오늘 기준으로 계산) */
@@ -470,27 +528,24 @@ function org(m){
   draw();
   const df={};rows.forEach(r=>{const d=r['Division']||'미지정';df[d]=(df[d]||0)+num(r['현재 HC'])-num(r['전월말 HC']);});
   const de=Object.entries(df).sort((a,b)=>b[1]-a[1]);
-  hbar(dc,de.map(x=>x[0]),de.map(x=>x[1]),d=>{$('fd').value=d;draw();$('ot').scrollIntoView({behavior:'smooth',block:'start'});},de.map(x=>x[1]>0?'#10b981':x[1]<0?'#ef4444':'#94a3b8'));
+  hbar(dc,de.map(x=>x[0]),de.map(x=>x[1]),d=>{$('fd').value=d;draw();$('ot').scrollIntoView({behavior:'smooth',block:'start'});},de.map(x=>x[1]>0?ACC:x[1]<0?RED:'#c7ced8'));
 }
 
 /* 고용형태 (요약 탭) */
 function empCard(m){
-  const e=D['03_Employment_Type']||[],l=e[e.length-1],p=e[e.length-2];if(!l)return;
-  const k=['임원','정규직','계약직','파견직'],v=k.map(x=>num(l[x])),tot=v.reduce((x,y)=>x+y,0);
-  const rows=k.map((x,i)=>{const d=p?v[i]-num(p[x]):null;return `<tr><td>${x}</td><td class="n">${v[i]}명</td>${p?`<td class="n">${sgn(d)}</td>`:''}</tr>`;}).join('');
-  const c=card(m,`고용형태 (기준일 ${esc(l['기준일'])})`,`<canvas height="170"></canvas><div class="tw" style="margin-top:10px"><table><thead><tr><th>구분</th><th class="n">현재</th>${p?`<th class="n">직전(${esc(p['기준일'])}) 대비</th>`:''}</tr></thead><tbody>${rows}<tr class="div"><td>합계</td><td class="n">${tot}명</td>${p?`<td class="n">${sgn(tot-k.reduce((x,y)=>x+num(p[y]),0))}</td>`:''}</tr></tbody></table></div>${l['장애인수']?`<p style="margin:8px 0 0;color:var(--mu)">장애인 ${esc(l['장애인수'])}명</p>`:''}`);
-  pie(c,k,v);
+  const e=D['03_Employment_Type']||[],l=e[e.length-1];if(!l)return;
+  const k=['임원','정규직','계약직','파견직'],v=k.map(x=>num(l[x])),tot=v.reduce((x,y)=>x+y,0)||1;
+  const col=['#16347a','#2f80ff','#8db9ff','#c7d2e3'],tc=['#fff','#fff','#191f28','#191f28'];
+  const seg=v.map((n,i)=>n?`<div class="sg" style="width:${n/tot*100}%;background:${col[i]};color:${tc[i]}" title="${k[i]} ${n}명"><span>${n/tot>=0.04?Math.round(n/tot*100)+'%':''}</span></div>`:'').join('');
+  card(m,'고용형태',`<p class="cd">기준일 ${esc(l['기준일'])} · 전체 ${tot}명의 구성 비율${l['장애인수']?` · 장애인 ${esc(l['장애인수'])}명`:''}</p><div class="eb100"><div class="sgw">${seg}</div><ul class="pl">${k.map((x,i)=>`<li><i style="background:${col[i]}"></i><span>${x}</span><em>${Math.round(v[i]/tot*100)}%</em><b>${v[i]}명</b></li>`).join('')}</ul></div>`);
 }
 
 /* Division별 현재 인원 (요약 탭) */
 function divCard(m,org){
-  const cur={},prv={};
-  org.forEach(r=>{const d=r['Division']||'미지정';cur[d]=(cur[d]||0)+num(r['현재 HC']);prv[d]=(prv[d]||0)+num(r['전월말 HC']);});
+  const cur={};org.forEach(r=>{const d=r['Division']||'미지정';cur[d]=(cur[d]||0)+num(r['현재 HC']);});
   const e=Object.entries(cur).sort((a,b)=>b[1]-a[1]);if(!e.length)return;
-  const tc=e.reduce((s,x)=>s+x[1],0),tp=Object.values(prv).reduce((s,x)=>s+x,0);
-  const c=card(m,'Division별 현재 인원 <small style="color:var(--mu);font-weight:400">(막대를 클릭하면 조직별 인원현황 탭으로 이동)</small>','<canvas height="'+Math.max(170,e.length*26)+'"></canvas>');
+  const c=card(m,'조직별 인원','<p class="cd">Division별 현재 인원 · 막대를 클릭하면 조직별 인원현황으로 이동합니다.</p><canvas height="'+Math.max(170,e.length*26)+'"></canvas>');
   hbar(c,e.map(x=>x[0]),e.map(x=>x[1]),goOrg);
-  c.insertAdjacentHTML('beforeend',`<div class="tw" style="margin-top:12px"><table class="ct"><thead><tr><th>구분</th>${e.map(x=>`<th>${esc(x[0])}</th>`).join('')}<th>합계</th></tr></thead><tbody><tr><td>현재</td>${e.map(x=>`<td>${x[1]}명</td>`).join('')}<td><b>${tc}명</b></td></tr><tr><td>전월말 대비</td>${e.map(x=>`<td>${sgn(x[1]-(prv[x[0]]||0))}</td>`).join('')}<td>${sgn(tc-tp)}</td></tr></tbody></table></div>`);
 }
 
 /* 월별 HC 탭 (01시트) */
@@ -498,12 +553,12 @@ function hcTab(m){
   const h=D['01_HC_Monthly']||[],r=[...h].reverse();
   const cols=['기준월','데이터구분','월말 재직자수','신규입사자','퇴사자','전월말 HC','전월대비'];
   if(!r.length){card(m,'월별 HC','데이터가 없습니다.');return;}
-  card(m,'월별 HC (최신순)',`<div class="tw"><table class="ct"><thead><tr>${cols.map(c=>`<th>${c}</th>`).join('')}</tr></thead><tbody>${r.map(x=>`<tr${x['데이터구분']==='잠정'?' class="pend"':''}>`+cols.map(c=>c==='전월대비'?`<td>${sgn(num(x[c]))}</td>`:c==='데이터구분'?`<td><span class="pill ${x[c]==='잠정'?'w':'g'}">${x[c]==='잠정'?'잠정(미정)':esc(x[c])}</span></td>`:`<td>${esc(x[c])}</td>`).join('')+'</tr>').join('')}</tbody></table></div><small style="color:var(--mu)">말일 퇴사자는 재직자수에 포함 / 파견직 포함<br>잠정(미정)은 월말 확정 전 수치입니다.</small>`);
+  card(m,'월별 HC (최신순)',`<div class="tw"><table class="ct"><thead><tr>${cols.map(c=>`<th>${c}</th>`).join('')}</tr></thead><tbody>${r.map(x=>`<tr${x['데이터구분']==='잠정'?' class="pend"':''}>`+cols.map(c=>c==='전월대비'?`<td>${sgn(num(x[c]))}</td>`:c==='데이터구분'?`<td><span class="pill ${x[c]==='잠정'?'r':'g'}">${x[c]==='잠정'?'잠정(미정)':esc(x[c])}</span></td>`:`<td>${esc(x[c])}</td>`).join('')+'</tr>').join('')}</tbody></table></div><small style="color:var(--mu)">말일 퇴사자는 재직자수에 포함 / 파견직 포함<br>잠정(미정)은 월말 확정 전 수치입니다.</small>`);
   const lb=h.map(x=>x['기준월']);
-  trend(m,'월말 재직자 추이',lb,[{label:'재직자수',data:h.map(x=>num(x['월말 재직자수'])),color:'#2563eb'}]);
-  trend(m,'월별 입사·퇴사',lb,[{label:'입사',data:h.map(x=>num(x['신규입사자'])),color:'#2563eb'},{label:'퇴사',data:h.map(x=>num(x['퇴사자'])),color:'#ef4444'}]);
+  trend(m,'월말 재직자 추이',lb,[{label:'재직자수',data:h.map(x=>num(x['월말 재직자수'])),color:ACC}]);
+  trend(m,'월별 입사·퇴사',lb,[{label:'입사',data:h.map(x=>num(x['신규입사자'])),color:ACC},{label:'퇴사',data:h.map(x=>num(x['퇴사자'])),color:RED}]);
   const R=rates();
-  const rc=trend(m,'월별 퇴사율 <small style="color:var(--mu);font-weight:400">(퇴직면담 시트 퇴사자 ÷ 평균 재직자, 평균 = 월말·전월말 평균)</small>',R.map(x=>x.label),[{label:'퇴사율',data:R.map(x=>x.rate),color:'#ef4444'},{label:'자발퇴사율',data:R.map(x=>x.vrate),color:'#f59e0b'}],true);
+  const rc=trend(m,'월별 퇴사율 <small style="color:var(--mu);font-weight:400">(퇴직면담 시트 퇴사자 ÷ 평균 재직자, 평균 = 월말·전월말 평균)</small>',R.map(x=>x.label),[{label:'퇴사율',data:R.map(x=>x.rate),color:ACC},{label:'자발퇴사율',data:R.map(x=>x.vrate),color:GRAY}],true);
   rc.insertAdjacentHTML('beforeend',`<p style="color:var(--mu);font-size:12px;margin:10px 0 0">${esc(reasonNote())}<br>퇴사자 수는 퇴직면담 시트의 퇴사일 +1일 기준(말일 퇴사자는 익월 퇴사)으로 집계해 위 표·요약과 같은 기준입니다. 평균 재직자는 월별 HC(월말·전월말 평균)입니다.</p>`);
 }
 
