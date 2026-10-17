@@ -161,7 +161,8 @@ tr.pend td{background:rgba(139,149,161,.12)}
 <div id="boot">불러오는 중…</div>
 <script>
 // ▼ Apps Script 웹 앱 URL(…/exec)을 아래 따옴표 안에 붙여넣으세요
-const API_URL = 'https://script.google.com/macros/s/AKfycbxIlFNg7SvwYqatND2Cjsxly7gtiPlytHRmJTFrXBMMtYAUealo6P2mGkNGn6xnmeZwiw/exec';
+const API_URL = 'https://script.google.com/macros/s/AKfycbxIlFNg7SvwYqatND2Cjsxly7gtiPlytHRmJTFrXBMMtYAUealo6P2mGkNGn6xnmeZwiw/exec
+';
 const DETAIL_URL = 'https://docs.google.com/spreadsheets/d/1JN_ochVXMmX8KCRtqDYzbkm-GezNuLWRIydfD9uZKmI/edit?gid=46510504#gid=46510504';
 const LINKS = [
   {t:'월별 인사기록부 폴더',s:'구글 드라이브 · 접근 권한 필요',u:'https://drive.google.com/drive/folders/1QKzxdumWSDgSOQK6U023zUe7bYS2ZW09'},
@@ -360,9 +361,9 @@ function stack(host,labels,series){
 }
 
 /* 요약 A: 월말 재직자 추이 (선그래프) */
-const ACTIVE_FROM='2026-10';
+const ACTIVE_FROM='2000-01'; /* 이 달부터 표시 (예: '2026-10'으로 바꾸면 10월부터만 표시) */
 function chartA(m,h,act){
-  const c=card(m,'월말 재직자 추이','<p class="cd">월별 마감 인원 · 인원 감소가 이어지는지, 특정 월에 급격한 변화가 있었는지 확인합니다.</p><label class="opt"><input type="checkbox" id="optA"> 실근무인원 표시 <small>(2026-10부터 집계)</small></label><div class="cv"><canvas></canvas></div>');
+  const c=card(m,'월말 재직자 추이','<p class="cd">월별 마감 인원 · 인원 감소가 이어지는지, 특정 월에 급격한 변화가 있었는지 확인합니다.</p><label class="opt"><input type="checkbox" id="optA"> 실근무인원 표시 <small>(월별 인사기록부 기준)</small></label><div class="cv"><canvas></canvas></div>');
   const lb=h.map(x=>x['기준월']),v=h.map(x=>num(x['월말 재직자수'])),pv=h.map(x=>num(x['전월말 HC'])),hist={};
   (D['08_ActiveHC']||[]).forEach(r=>{const k=mkey(r['기준월']);if(k&&k>=ACTIVE_FROM)hist[k]=num(r['실근무인원']);});
   const a2=h.map((x,i)=>{const k=mkey(x['기준월']);if(!k||k<ACTIVE_FROM)return null;if(hist[k]!==undefined)return hist[k];return i===h.length-1?act:null;});
