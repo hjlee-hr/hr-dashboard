@@ -130,6 +130,18 @@ tr.pend td{background:rgba(139,149,161,.12)}
   .stk{top:64px}
 }
 
+/* termination chart alignment and monthly workforce report v3 */
+.offstats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.offstats>div{display:flex;flex-direction:column;gap:4px;padding:10px 14px;background:var(--bg);border-radius:12px}
+.offstats small{font-size:12px;color:var(--mu)}.offstats b{font-size:28px;line-height:1.15}.offstats span{font-size:12px;color:var(--mu)}
+.off-chart-grid{grid-template-columns:minmax(0,1fr)!important}.off-chart-grid>.card{min-width:0}
+.off-chart-grid .off-pie .pw{justify-content:flex-start}.off-chart-grid .off-bar{max-width:none}
+.mrkpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:12px 0 18px}
+.mrkpis>div{display:flex;flex-direction:column;gap:4px;background:var(--bg);padding:16px;border-radius:14px}
+.mrkpis span{font-size:12px;color:var(--mu)}.mrkpis b{font-size:25px}.mrkpis small{font-size:11px;color:var(--mu)}
+.mrbullets{line-height:1.7}.mrbullets p{margin:5px 0}
+.mrreport td{white-space:normal;min-width:65px;vertical-align:top}.mrreport .tw{max-width:100%}
+@media(max-width:720px){.offstats{grid-template-columns:1fr}.mrkpis{grid-template-columns:repeat(2,minmax(0,1fr))}}
 /* Monthly report and browser-native PDF export */
 .mrhead{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap}
 .mrnote{font-size:12px;color:var(--mu);line-height:1.6}
@@ -145,6 +157,7 @@ tr.pend td{background:rgba(139,149,161,.12)}
  .mrreport,.mrreport .card{border:0!important;box-shadow:none!important;break-inside:avoid;page-break-inside:avoid;background:#fff!important;color:#191f28!important}
  .mrreport{padding:0!important}
  .mrreport .grid{grid-template-columns:1fr 1fr!important}
+ .mrreport .mrkpis{grid-template-columns:repeat(4,minmax(0,1fr))!important}
  .mrreport .kpis{grid-auto-flow:column!important}
  .mrreport .kpi{padding:10px!important}
  .mrreport .kt>b{font-size:22px!important}
@@ -606,11 +619,12 @@ function off(m){
   const all=(D['05_Offboarding']||[]).map(x=>{const t=pd(x['퇴사일']);if(t===null)return {...x,'집계월':'','_y':'','_m':''};const d=new Date(t+864e5),y=d.getUTCFullYear(),mo=d.getUTCMonth()+1;return {...x,'집계월':y+'-'+('0'+mo).slice(-2),'_y':String(y),'_m':mo+'월'};});
   const stick=document.createElement('div');stick.className='stk';m.appendChild(stick);
   const R=rates(),L=R[R.length-1];
-  if(L)card(stick,'',`<div style="display:flex;flex-wrap:wrap;gap:4px 16px;align-items:baseline"><b>📉 최근 월 퇴사율</b><span style="font-size:26px;font-weight:800">${L.rate}%</span><span style="color:var(--mu)">${esc(L.label)}${L.tent?' (잠정)':''} · 퇴사 ${L.out}명 ÷ 평균 재직자 ${Math.round(L.avg*10)/10}명 · 자발퇴사율 ${L.vrate}%</span></div>`);
+  if(L)card(stick,'',`<div class="offstats"><div><small>최근 월 퇴사율 · ${esc(L.label)}${L.tent?' (잠정)':''}</small><b>${L.rate}%</b><span>퇴사 ${L.out}명 ÷ 평균 재직자 ${Math.round(L.avg*10)/10}명</span></div><div><small>당월 퇴사자 수 · ${esc(L.label)}</small><b>${L.out}명</b><span>해당 월 퇴사일 +1일 집계 기준</span></div><div><small>최근 월 자발퇴사율</small><b>${L.vrate}%</b><span>전체 자발퇴사 기준 (기존 분류)</span></div></div>`);
   const F=[['_y','연도'],['_m','퇴사월'],['소속','소속'],['퇴사사유','퇴사사유']];
   card(stick,'',`<div class="bar">${F.map(([k,t])=>`<select data-k="${k}"><option value="">${t} 전체</option>${uniq(all,k).sort((a,b)=>k==='_m'?parseInt(a)-parseInt(b):String(a).localeCompare(String(b))).map(x=>`<option>${esc(x)}</option>`).join('')}</select>`).join('')}<input id="fn" placeholder="성명 검색"><a class="btn" href="${DETAIL_URL}" target="_blank" rel="noopener">상세 사유 보기 ↗</a></div>`);
   const g=document.createElement('div');g.className='grid';
-  g.innerHTML='<div class="card"><h3>퇴사사유</h3><canvas height="200"></canvas></div><div class="card"><h3>소속별 퇴사자</h3><canvas height="200"></canvas></div>';
+  g.classList.add('off-chart-grid');
+  g.innerHTML='<div class="card off-pie"><h3>퇴사사유</h3><canvas height="200"></canvas></div><div class="card off-bar"><h3>소속별 퇴사자</h3><canvas height="200"></canvas></div>';
   m.appendChild(g);const tr=card(m,'퇴사사유 월별 추이 <small style="color:var(--mu);font-weight:400">(상위 5개 사유, 나머지는 기타)</small>','<canvas height="110"></canvas>');const lst=card(m,'','');
   const draw=()=>{
     killCharts();
@@ -633,99 +647,101 @@ function off(m){
   m.querySelectorAll('select[data-k]').forEach(s=>s.onchange=draw);$('fn').oninput=draw;draw();
 }
 
-/* 7. 월간 HR 인사이트: 이미 존재하는 HC/퇴직면담/조직 스냅샷에서 분석 */
+/* 7. 월간 HR 인사이트 v3 — Division 기준 및 복합 분석 */
 function mrMonth(t){return mkey(t);}
-function mrExitMonth(t){
-  const x=pd(t);if(x===null)return null;
-  const d=new Date(x+86400000);return d.getUTCFullYear()+'-'+String(d.getUTCMonth()+1).padStart(2,'0');
-}
+function mrExitMonth(t){const x=pd(t);if(x===null)return null;const d=new Date(x+86400000);return d.getUTCFullYear()+'-'+String(d.getUTCMonth()+1).padStart(2,'0');}
 function mrPct(n,d){return d>0?(100*n/d).toFixed(1)+'%':'-';}
 function mrClean(v,unknown='미기재'){const s=String(v||'').trim();return s&&s!=='-'?s:unknown;}
 function mrCounts(rows,key){const o={};rows.forEach(r=>{const x=mrClean(typeof key==='function'?key(r):r[key]);o[x]=(o[x]||0)+1;});return o;}
 function mrEntries(o){return Object.entries(o).sort((a,b)=>b[1]-a[1]||a[0].localeCompare(b[0],'ko'));}
-function mrTable(headers,rows){
-  if(!rows.length)return '<p class="mrnote">집계 데이터가 없습니다.</p>';
-  return '<div class="tw"><table><thead><tr>'+headers.map(x=>'<th>'+esc(x)+'</th>').join('')+'</tr></thead><tbody>'+rows.map(r=>'<tr>'+r.map(v=>'<td>'+esc(String(v??'-'))+'</td>').join('')+'</tr>').join('')+'</tbody></table></div>';
-}
-function mrOrgKey(x){return mrClean(x['소속'],'미지정')+' / '+mrClean(x['팀'],'미지정');}
-function mrHcByTeam(rows){const out={};rows.forEach(r=>{const k=mrClean(r['Division'],'미지정')+' / '+mrClean(r['Team'],'미지정');out[k]=(out[k]||0)+num(r['재직자수']);});return out;}
-function mrLine(canvas,labels,series){
-  if(!canvas)return;
-  charts.push(new Chart(canvas,{type:'line',data:{labels,datasets:series.map((x,i)=>({label:x.label,data:x.values,borderColor:PAL[i%PAL.length],backgroundColor:PAL[i%PAL.length],tension:.25,pointRadius:3,spanGaps:false}))},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom'}},scales:{y:{beginAtZero:true,ticks:{precision:0}}}}}));
-}
+function mrTable(headers,rows){if(!rows.length)return '<p class="mrnote">해당 기준의 데이터가 없습니다.</p>';return '<div class="tw"><table><thead><tr>'+headers.map(x=>'<th>'+esc(x)+'</th>').join('')+'</tr></thead><tbody>'+rows.map(r=>'<tr>'+r.map(v=>'<td>'+esc(String(v??'-'))+'</td>').join('')+'</tr>').join('')+'</tbody></table></div>';}
+function mrLine(canvas,labels,series){if(!canvas)return;charts.push(new Chart(canvas,{type:'line',data:{labels,datasets:series.map((x,i)=>({label:x.label,data:x.values,borderColor:PAL[i%PAL.length],backgroundColor:PAL[i%PAL.length],tension:.25,pointRadius:3,spanGaps:false}))},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom'}},scales:{y:{beginAtZero:true,ticks:{precision:0}}}}}));}
+function mrVoluntary(x){const a=String(x['퇴사사유']||''),b=String(x['퇴사사유 세부']||'');if(/권고\s*사직|권고|비자발|해고|징계|정리해고|계약\s*(종료|만료)|정년|면직/.test(a))return false;if(/권고\s*사직|권고|비자발|해고|징계|정리해고/.test(b))return false;return isVol(a)===true;}
+function mrDiv(x){return mrClean(x['소속'],'미지정');}
+function mrKnownDest(x){const v=mrClean(x['이직처']);return /^(미기재|미공개|비공개|미확인|없음|확인\s*불가|모름|미정)$/i.test(v)?null:v;}
+function mrMap(rows,field){const o={};rows.forEach(x=>{const k=mrClean(x['Division'],'미지정');o[k]=(o[k]||0)+num(x[field]);});return o;}
+function mrSafeDest(n){return n>=3;}
 function monthlyReport(m){
-  const hc=(D['01_HC_Monthly']||[]).filter(r=>mrMonth(r['기준월'])).slice().sort((a,b)=>mrMonth(a['기준월']).localeCompare(mrMonth(b['기준월'])));
-  if(!hc.length){card(m,'월간 HR 인사이트','01_HC_Monthly 데이터가 없습니다.');return;}
-  const months=[...new Set(hc.map(r=>mrMonth(r['기준월'])))];let chosen=months[months.length-1];
-  const controls=card(m,'',`<div class="mrhead mrcontrols"><div><b>분석 기준월</b> <select id="mrmonth">${months.map(x=>`<option value="${esc(x)}"${x===chosen?' selected':''}>${esc(x)}</option>`).join('')}</select></div><button type="button" class="p" id="mrpdf">PDF로 저장 / 인쇄</button></div><p class="mrnote">이미 집계된 시트 데이터를 분석합니다. 기준월 이전 최근 6개월 흐름과 선택한 달을 비교합니다.</p>`);
-  const report=card(m,'','');report.classList.add('mrreport');
-  function draw(){
-    killCharts();
-    const monthIdx=months.indexOf(chosen), history=months.slice(Math.max(0,monthIdx-5),monthIdx+1),prev=months[monthIdx-1]||null;
-    const data=(D['05_Offboarding']||[]).map(x=>({...x,_month:mrExitMonth(x['퇴사일'])})).filter(x=>x._month&&x._month<=chosen);
-    const current=data.filter(x=>x._month===chosen),previous=data.filter(x=>x._month===prev);
-    const recent=data.filter(x=>history.includes(x._month));
-    const row=hc.find(x=>mrMonth(x['기준월'])===chosen)||{};
-    const orgSheet=D['09_Monthly_Org']||[];
-    const teamNow=mrHcByTeam(orgSheet.filter(x=>mrMonth(x['기준월'])===chosen));
-    const teamPrev=mrHcByTeam(orgSheet.filter(x=>mrMonth(x['기준월'])===prev));
-    const allTeams=[...new Set([...Object.keys(teamNow),...Object.keys(teamPrev),...recent.map(mrOrgKey)])];
-    const byReason=mrCounts(current,'퇴사사유'),oldReason=mrCounts(previous,'퇴사사유'),reasons=mrEntries(mrCounts(recent,'퇴사사유'));
-    const reasonTitles=reasons.slice(0,5).map(x=>x[0]);
-    const reasonMoves=reasonTitles.map(r=>({name:r,now:byReason[r]||0,old:oldReason[r]||0})).sort((a,b)=>b.now-a.now);
-    const reasonChart=reasonTitles.map(r=>({label:r,values:history.map(month=>recent.filter(x=>x._month===month&&mrClean(x['퇴사사유'])===r).length)}));
-    const divisionReason={};current.forEach(x=>{const d=mrClean(x['소속'],'미지정'),r=mrClean(x['퇴사사유']);if(!divisionReason[d])divisionReason[d]={};divisionReason[d][r]=(divisionReason[d][r]||0)+1;});
-    const divisionRows=Object.entries(divisionReason).map(([d,v])=>{const top=mrEntries(v)[0];return [d,Object.values(v).reduce((a,b)=>a+b,0),top[0]+' ('+top[1]+'명)',mrEntries(v).slice(0,3).map(([r,n])=>r+' '+n+'명').join(' · ')];}).sort((a,b)=>b[1]-a[1]);
-    const allCurrent=mrCounts(current,mrOrgKey),recentTeam=mrCounts(recent,mrOrgKey);
-    const teamRows=allTeams.map(t=>{
-      const n=allCurrent[t]||0,prevN=teamPrev[t],nowN=teamNow[t],prevExists=Object.hasOwn(teamPrev,t),nowExists=Object.hasOwn(teamNow,t);
-      const recentN=recentTeam[t]||0, avg=prevExists&&nowExists?(prevN+nowN)/2:null;
-      const net=prevExists&&nowExists?nowN-prevN:null;
-      const inflow=net===null?null:net+n;
-      return {t,n,recentN,avg,rate:avg>0?100*n/avg:null,net,inflow,prevN,nowN};
-    });
-    const topTeams=teamRows.filter(x=>x.n||x.recentN).sort((a,b)=>b.recentN-a.recentN||b.n-a.n).slice(0,12);
-    const rateTeams=teamRows.filter(x=>x.n&&x.avg>=5).sort((a,b)=>(b.rate||0)-(a.rate||0));
-    const unstable=teamRows.filter(x=>x.inflow!==null&&(x.n>0||x.inflow>0)).sort((a,b)=>(Math.max(0,b.inflow)+b.n)-(Math.max(0,a.inflow)+a.n));
-    const industries=mrEntries(mrCounts(current,'산업군'));
-    const prevIndustries=mrCounts(previous,'산업군');
-    const dest=mrEntries(mrCounts(current,x=>{
-      const v=mrClean(x['이직처'],'미기재');return ['미공개','비공개','미기재','미확인','없음'].includes(v)?'미공개/미기재':v;
-    }));
-    const priorDest=mrCounts(previous,x=>{const v=mrClean(x['이직처'],'미기재');return ['미공개','비공개','미기재','미확인','없음'].includes(v)?'미공개/미기재':v;});
-    const known=dest.filter(([name])=>name!=='미공개/미기재').reduce((s,[,n])=>s+n,0);
-    const knownPrior=previous.filter(x=>{const v=mrClean(x['이직처'],'미기재');return !['미공개','비공개','미기재','미확인','없음'].includes(v);}).length;
-    const pivot=reasonMoves.find(x=>x.now>x.old);
-    const hotspot=divisionRows[0];
-    const topRate=rateTeams[0];
-    const bullets=[];
-    if(current.length)bullets.push(`이번 달 퇴사 ${current.length}명으로 ${prev?`전월 ${previous.length}명 대비 ${current.length-previous.length>0?'+':''}${current.length-previous.length}명`:'전월 비교 데이터 없음'}입니다.`);
-    if(pivot)bullets.push(`퇴사사유 ‘${pivot.name}’가 전월 ${pivot.old}명에서 ${pivot.now}명으로 늘었습니다. 증가 원인은 별도 확인이 필요합니다.`);
-    if(hotspot)bullets.push(`‘${hotspot[0]}’에서 ${hotspot[1]}명이 퇴사했으며 가장 많이 기록된 사유는 ‘${mrEntries(divisionReason[hotspot[0]])[0][0]}’입니다. 사유가 실제 원인인지 면담 내용을 추가 확인해야 합니다.`);
-    if(topRate)bullets.push(`팀 규모를 고려한 참고 퇴사율 상위 조직은 ‘${topRate.t}’(${topRate.rate.toFixed(1)}%)입니다. 소수 인원 조직은 작은 변동에도 비율이 크게 움직입니다.`);
-    if(industries.length)bullets.push(`퇴사 후 이동 산업군 최다 항목은 ‘${industries[0][0]}’(${industries[0][1]}명)입니다. 산업군은 기재된 면담 대상자만을 기반으로 해석해야 합니다.`);
-    if(!bullets.length)bullets.push('선택한 월에 분석할 퇴사자 데이터가 없습니다.');
-    const industryText=industries.slice(0,8).map(([x,v])=>`${x} ${v}명`).join(' · ');
-    const availableRates=rateTeams.length?'분모 5명 이상 조직만 퇴사율 순위에 사용':'비교 가능한 팀 인원 자료가 부족해 팀별 퇴사율 순위를 표시하지 않습니다';
-    const destinationRows=dest.filter(([x,n])=>x==='미공개/미기재'||n>=3).slice(0,10).map(([x,n])=>[x,n,prevDestText(x,priorDest)]);
-    function prevDestText(x,prior){return (prior[x]||0)+'명';}
-    report.innerHTML=`<div class="mrprinthead"><h1>콩스튜디오코리아 월간 HR 인사이트</h1><p>${esc(chosen)} · 내부 분석용</p></div>
-      <div class="mrhead"><div><div class="eb">MONTHLY PEOPLE INSIGHTS</div><h2>${esc(chosen)} 월간 인력 분석</h2></div><span class="mrnote">기존 현황표를 반복하지 않는 변화·원인 분석 보고서</span></div>
-      <div class="card"><h3>핵심 인사이트 · 이번 달 주목할 변화</h3><div style="line-height:1.9">${bullets.map(b=>'<p style="margin:4px 0">• '+esc(b)+'</p>').join('')}</div><p class="mrnote">퇴사 이유의 인과관계를 단정하지 않으며, 조직별·기간별 면담 기록을 통해 확인할 분석 단서를 제공합니다.</p></div>
-      <div class="grid"><div class="card"><h3>퇴사사유의 월별 변화</h3><p class="mrnote">최근 6개월 상위 5개 사유의 추이 · 월별 건수</p><div class="cv"><canvas id="mrReasons"></canvas></div></div>
-        <div class="card"><h3>이번 달 사유의 증감</h3>${mrTable(['퇴사사유','전월','당월','증감'],reasonMoves.map(x=>[x.name,x.old,x.now,(x.now-x.old>0?'+':'')+(x.now-x.old)]))}</div></div>
-      <div class="grid"><div class="card"><h3>어느 소속에서 어떤 이유로 퇴사했나?</h3>${mrTable(['소속','퇴사','주요 사유','사유 구성'],divisionRows)}</div>
-        <div class="card"><h3>반복적으로 퇴사가 발생하는 팀</h3><p class="mrnote">최근 6개월 누적 퇴사 건수가 높은 순서</p>${mrTable(['Division / Team','최근 6개월','이번 달'],topTeams.map(x=>[x.t,x.recentN,x.n]))}</div></div>
-      <div class="grid"><div class="card"><h3>인원 규모 대비 퇴사율이 높은 팀</h3><p class="mrnote">${esc(availableRates)} · 당월 퇴사자 ÷ 전월말·당월말 평균 팀 인원</p>${mrTable(['Division / Team','당월 퇴사','평균 인원','참고 퇴사율'],rateTeams.slice(0,10).map(x=>[x.t,x.n,x.avg.toFixed(1),x.rate.toFixed(1)+'%']))}</div>
-        <div class="card"><h3>유입·이탈이 동시에 많은 팀</h3><p class="mrnote">입사자 실적이 아니라 <b>추정 유입 = 인원 순증감 + 퇴사 기록</b>입니다. 조직 간 이동·명칭 변경·퇴사 기록 누락을 구분할 수 없습니다.</p>${mrTable(['Division / Team','인원 순증감','퇴사','유입 추정'],unstable.slice(0,10).map(x=>[x.t,(x.net>0?'+':'')+x.net,x.n,x.inflow<0?'산출 불가':x.inflow]))}</div></div>
-      <div class="grid"><div class="card"><h3>퇴사 후 이동 산업군</h3><p class="mrnote">산업군별 분포 및 전월 대비 변화 · 이번 달 ${esc(industryText||'입력 없음')}</p>${mrTable(['산업군','당월','전월','증감'],industries.map(([x,n])=>[x,n,prevIndustries[x]||0,(n-(prevIndustries[x]||0)>0?'+':'')+(n-(prevIndustries[x]||0))]))}</div>
-        <div class="card"><h3>이직처 분석</h3><p class="mrnote">이직처 확인 ${known}/${current.length}명 (${mrPct(known,current.length)}) · 전월 ${knownPrior}/${previous.length}명. 회사명은 3건 이상인 경우만 노출합니다.</p>${mrTable(['이직처','당월','전월'],destinationRows)}<p class="mrnote">개별 이동처 1~2건은 재식별 방지를 위해 표에서 제외됩니다. 미공개/미기재는 실제 이동이 없는 것으로 해석할 수 없습니다.</p></div></div>
-      <div class="card"><h3>해석할 때 주의할 점</h3><p class="mrnote">퇴사 월은 기존 대시보드와 같이 퇴사일의 다음 날이 속한 월로 계산합니다. 조직명은 퇴직면담의 소속/팀과 09_Monthly_Org의 Division/Team이 일치할 때만 퇴사율 산출이 가능합니다. 월말 인원으로부터 계산한 '유입 추정'은 실제 팀별 입사율이 아닙니다. 실제 입사자 수·팀간 전배를 분리하려면 월별 인사명부의 인원 단위 비교가 추가로 필요합니다. 조직별 소수 사례와 이직처는 개인정보 노출에 주의하세요.</p></div>`;
-    mrLine(report.querySelector('#mrReasons'),history,reasonChart);
-  }
-  controls.querySelector('#mrmonth').onchange=e=>{chosen=e.target.value;draw();};
-  controls.querySelector('#mrpdf').onclick=()=>{const old=document.title;document.title='HR_Insights_'+chosen;window.print();document.title=old;};
-  draw();
+ const hc=(D['01_HC_Monthly']||[]).filter(r=>mrMonth(r['기준월'])).slice().sort((a,b)=>mrMonth(a['기준월']).localeCompare(mrMonth(b['기준월'])));
+ if(!hc.length){card(m,'월간 HR 인사이트','01_HC_Monthly 데이터가 없습니다.');return;}
+ const months=[...new Set(hc.map(x=>mrMonth(x['기준월'])))];let chosen=months[months.length-1];
+ const controls=card(m,'',`<div class="mrhead mrcontrols"><div><b>분석 기준월</b> <select id="mrmonth">${months.map(x=>`<option value="${esc(x)}"${x===chosen?' selected':''}>${esc(x)}</option>`).join('')}</select></div><button type="button" class="p" id="mrpdf">PDF로 저장 / 인쇄</button></div><p class="mrnote">Division 단위 분석 · 최근 최대 6개월 추이 · 개인정보 보호를 위해 소수 이직처는 비공개</p>`);
+ const report=card(m,'','');report.classList.add('mrreport');
+ function draw(){
+  killCharts();
+  const idx=months.indexOf(chosen),prev=months[idx-1]||null,history=months.slice(Math.max(0,idx-5),idx+1);
+  const currentHC=hc.find(r=>mrMonth(r['기준월'])===chosen)||{};
+  const oldHC=hc.find(r=>mrMonth(r['기준월'])===prev)||{};
+  const all=(D['05_Offboarding']||[]).map(x=>({...x,_month:mrExitMonth(x['퇴사일'])})).filter(x=>x._month&&x._month<=chosen);
+  const current=all.filter(x=>x._month===chosen),previous=all.filter(x=>x._month===prev),recent=all.filter(x=>history.includes(x._month));
+  const volCur=current.filter(mrVoluntary),volRecent=recent.filter(mrVoluntary);
+  const org=(D['09_Monthly_Org']||[]),nowRows=org.filter(x=>mrMonth(x['기준월'])===chosen),prevRows=org.filter(x=>mrMonth(x['기준월'])===prev);
+  const now=mrMap(nowRows,'재직자수'),old=mrMap(prevRows,'재직자수'),leaveNow=mrMap(nowRows,'휴직자수'),leaveOld=mrMap(prevRows,'휴직자수');
+  const hasOrg=nowRows.length>0,hasPrevOrg=prevRows.length>0;
+  const changes=[...new Set([...Object.keys(now),...Object.keys(old)])].map(d=>({d,n:now[d]||0,p:old[d]||0,delta:(now[d]||0)-(old[d]||0),created:!Object.hasOwn(old,d)&&Object.hasOwn(now,d),ended:Object.hasOwn(old,d)&&!Object.hasOwn(now,d)}));
+  const changed=changes.filter(x=>x.created||x.ended||x.delta!==0).sort((a,b)=>Math.abs(b.delta)-Math.abs(a.delta));
+  const joiners=num(currentHC['신규입사자']),leavers=num(currentHC['퇴사자']),net=num(currentHC['월말 재직자수'])-num(currentHC['전월말 HC']);
+  const detailNow=mrCounts(current,'퇴사사유 세부'),detailPrev=mrCounts(previous,'퇴사사유 세부');
+  const detailTop=[...new Set([...Object.keys(detailNow),...Object.keys(detailPrev)])].map(k=>[k,detailPrev[k]||0,detailNow[k]||0,(detailNow[k]||0)-(detailPrev[k]||0)]).sort((a,b)=>Math.abs(b[3])-Math.abs(a[3])||b[2]-a[2]);
+  const basic=mrEntries(mrCounts(recent,'퇴사사유')).slice(0,5).map(([k])=>k);
+  const reasonChart=basic.map(k=>({label:k,values:history.map(month=>recent.filter(x=>x._month===month&&mrClean(x['퇴사사유'])===k).length)}));
+  const divisions=[...new Set([...Object.keys(now),...Object.keys(old),...recent.map(mrDiv)])];
+  const volByDiv=mrCounts(volCur,mrDiv),volRecentByDiv=mrCounts(volRecent,mrDiv),allByDiv=mrCounts(current,mrDiv);
+  const divisionLines=divisions.map(d=>{
+   const rs=current.filter(x=>mrDiv(x)===d),v=volCur.filter(x=>mrDiv(x)===d),v6=volRecent.filter(x=>mrDiv(x)===d);
+   const r=mrEntries(mrCounts(rs,'퇴사사유'));
+   const top=mrEntries(mrCounts(v6,'퇴사사유'))[0];
+   const destinations=mrEntries(mrCounts(rs.filter(x=>mrKnownDest(x)),x=>mrKnownDest(x)));
+   const destText=destinations.filter(([,n])=>mrSafeDest(n)).map(([k,n])=>k+' '+n+'명').join(' · ')|| (destinations.length?'확인됨 (소수 비공개)':'미확인');
+   const avg=Object.hasOwn(now,d)&&Object.hasOwn(old,d)?((now[d]+old[d])/2):null;
+   return {d,rs,v,v6,r,top,destText,avg,rate:avg>0?v.length/avg*100:null};
+  });
+  const repeat=divisionLines.filter(x=>x.v6.length>0).sort((a,b)=>b.v6.length-a.v6.length||b.v.length-a.v.length);
+  const highRate=divisionLines.filter(x=>x.v.length>0&&x.avg>=5).sort((a,b)=>b.rate-a.rate);
+  const flows=D['10_Monthly_Flow']||[];
+  const flowNow=flows.filter(x=>mrMonth(x['기준월'])===chosen),flowOld=flows.filter(x=>mrMonth(x['기준월'])===prev);
+  const flowByDiv={};flowNow.forEach(x=>{const d=mrClean(x['Division'],'미지정');flowByDiv[d]=x;});
+  const movementRows=divisions.map(d=>{const flow=flowByDiv[d];const prevN=old[d]||0,currN=now[d]||0;return {d,prevN,currN,newNames:flow?num(flow['신규등장']):null,transIn:flow?num(flow['전입']):null,transOut:flow?num(flow['전출']):null,exits:volByDiv[d]||0};});
+  const movers=movementRows.filter(x=>x.newNames!==null).sort((a,b)=>b.newNames-a.newNames||b.transIn-a.transIn);
+  const unstable=movementRows.filter(x=>x.newNames!==null&&(x.newNames+x.transIn)>0&&x.exits>0).sort((a,b)=>(b.newNames+b.transIn+b.exits)-(a.newNames+a.transIn+a.exits));
+  const rest=mrEntries(mrCounts((D['04_Longterm_Leave']||[]),'휴직종류'));
+  const curLeave=Object.values(leaveNow).reduce((a,b)=>a+b,0),prevLeave=Object.values(leaveOld).reduce((a,b)=>a+b,0);
+  const leaveRows=[...new Set([...Object.keys(leaveNow),...Object.keys(leaveOld)])].map(d=>[d,leaveOld[d]||0,leaveNow[d]||0,(leaveNow[d]||0)-(leaveOld[d]||0),now[d]?mrPct(leaveNow[d]||0,now[d]):'-']).sort((a,b)=>b[2]-a[2]);
+  const known=current.filter(x=>mrKnownDest(x)),knownDest=mrEntries(mrCounts(known,x=>mrKnownDest(x))),industry=mrEntries(mrCounts(known,'산업군'));
+  const oldDest=mrCounts(previous.filter(x=>mrKnownDest(x)),x=>mrKnownDest(x));
+  const destinationRows=knownDest.filter(([,n])=>mrSafeDest(n)).map(([k,n])=>[k,n,oldDest[k]||0]);
+  const lanes={};all.filter(x=>mrKnownDest(x)).forEach(x=>{const key=JSON.stringify([mrDiv(x),mrKnownDest(x)]);(lanes[key]=lanes[key]||[]).push(x);});
+  const recurring=Object.entries(lanes).filter(([,v])=>v.length>=3&&new Set(v.map(x=>x._month)).size>=2).map(([key,v])=>{const [d,company]=JSON.parse(key);return {d,company,n:v.length,months:[...new Set(v.map(x=>x._month))].sort()};}).sort((a,b)=>b.n-a.n);
+  const currentLanes=recurring.filter(x=>x.months.includes(chosen));
+  const bullets=[];
+  if(hasOrg&&hasPrevOrg){const rising=changed.filter(x=>x.delta>0).slice(0,2),falling=changed.filter(x=>x.delta<0).slice(0,2);if(rising.length)bullets.push('인원이 증가한 Division: '+rising.map(x=>x.d+' +'+x.delta+'명').join(', '));if(falling.length)bullets.push('인원이 감소한 Division: '+falling.map(x=>x.d+' '+x.delta+'명').join(', '));}
+  if(repeat.length)bullets.push(`최근 최대 6개월 자발퇴사(권고사직 등 제외) 집중: ${repeat[0].d} ${repeat[0].v6.length}명. 가장 빈번한 사유는 '${repeat[0].top[0]}'입니다.`);
+  if(currentLanes.length)bullets.push('반복 이직 이동: '+currentLanes.slice(0,3).map(x=>x.d+' → '+x.company+' '+x.n+'명').join(', ')+' (최근 집계 기록, 2개 이상 월에 발생)');
+  if(hasOrg&&hasPrevOrg&&curLeave>prevLeave)bullets.push(`휴직자는 전월 ${prevLeave}명에서 ${curLeave}명으로 ${curLeave-prevLeave}명 증가했습니다.`);
+  if(!bullets.length)bullets.push('선택한 월에 기준을 충족하는 특별한 변동 패턴이 없거나, 분석에 필요한 데이터가 부족합니다.');
+  const orgNotes=hasOrg&&hasPrevOrg?'전월/당월 조직 스냅샷 비교':'과거 조직 인원 자료가 부족합니다';
+  report.innerHTML=`<div class="mrprinthead"><h1>콩스튜디오코리아 월간 HR 인사이트</h1><p>${esc(chosen)} · 내부 분석용</p></div>
+  <div class="mrhead"><div><div class="eb">MONTHLY PEOPLE INSIGHTS</div><h2>${esc(chosen)} 인력 · 조직 · 퇴사 · 휴직</h2></div><span class="mrnote">분석 단위: Division · 비교: 전월 및 최근 최대 6개월</span></div>
+  <div class="mrkpis"><div><span>월말 재직자</span><b>${num(currentHC['월말 재직자수'])}명</b><small>전월 대비 ${net>=0?'+':''}${net}명</small></div><div><span>당월 신규 입사</span><b>${joiners}명</b><small>01_HC_Monthly 실적</small></div><div><span>당월 퇴사</span><b>${leavers}명</b><small>01_HC_Monthly 실적</small></div><div><span>휴직 인원</span><b>${hasOrg?curLeave+'명':'자료 없음'}</b><small>${hasOrg&&hasPrevOrg?'전월 대비 '+(curLeave-prevLeave>=0?'+':'')+(curLeave-prevLeave)+'명':'09_Monthly_Org 기준'}</small></div></div>
+  <div class="card"><h3>이번 달 주목할 인력 변화</h3><div class="mrbullets">${bullets.map(x=>'<p>• '+esc(x)+'</p>').join('')}</div><p class="mrnote">상관관계와 반복 패턴을 표시하며 퇴사의 원인을 확정하지 않습니다.</p></div>
+  <div class="card"><h3>① 재직자 · Division별 인원 변화</h3><p class="mrnote">${esc(orgNotes)} · 신설/소멸은 해당 월 스냅샷에 새로 나타나거나 사라진 조직이라는 의미이며, 실제 조직 개편 확정이 아닙니다.</p>${hasOrg&&hasPrevOrg?mrTable(['Division','전월','당월','증감','상태'],changed.map(x=>[x.d,x.p,x.n,(x.delta>0?'+':'')+x.delta,x.created?'신규 등장':x.ended?'목록에서 소멸':'유지'])):'<p class="mrnote">월별 조직 기록(09_Monthly_Org)이 충분하지 않습니다.</p>'}</div>
+  <div class="grid"><div class="card"><h3>② Division별 신규 유입 · 전입</h3><p class="mrnote">신규 입사 실적은 상단의 01_HC_Monthly가 정확한 기준입니다. 아래 Division별 값은 인사기록부에서 전월에 없던 사람(신규 등장)과 조직을 옮긴 사람(전입)을 구분한 참고치입니다.</p>${flowNow.length?mrTable(['Division','신규 등장','전입','전출'],movers.map(x=>[x.d,x.newNames,x.transIn,x.transOut])):'<p class="mrnote">정확한 Division 유입 비교는 추가 파일 10_Monthly_Flow를 생성한 후 표시됩니다. 이름 중복/복직 등은 인사 실적과 다를 수 있습니다.</p>'}</div>
+   <div class="card"><h3>③ 유입과 자발퇴사가 함께 발생한 Division</h3><p class="mrnote">최근 월 신규 등장 + 전입과 자발퇴사를 비교합니다. 권고사직·해고·계약종료 등 제외. 전배를 입사로 간주하지 않습니다.</p>${flowNow.length?mrTable(['Division','신규 등장','전입','자발퇴사'],unstable.map(x=>[x.d,x.newNames,x.transIn,x.exits])):'<p class="mrnote">10_Monthly_Flow 집계가 필요합니다.</p>'}</div></div>
+  <div class="grid"><div class="card"><h3>④ 휴직 인원 · Division별 변화</h3><p class="mrnote">휴직자 수 및 재직자 대비 휴직 비중. 09_Monthly_Org의 기준월별 집계</p>${hasOrg?mrTable(['Division','전월 휴직','당월 휴직','증감','휴직 비중'],leaveRows):'<p class="mrnote">09_Monthly_Org 데이터가 없습니다.</p>'}</div>
+   <div class="card"><h3>⑤ 현재 휴직 유형 구성</h3><p class="mrnote">04_Longterm_Leave의 현재 명부 기준 · 과거 월별 유형 구성과 구분</p>${mrTable(['휴직 유형','인원'],rest)}</div></div>
+  <div class="grid"><div class="card"><h3>⑥ 퇴사사유의 월별 추이</h3><p class="mrnote">최근 최대 6개월 · 퇴사사유(대분류) 상위 5개</p><div class="cv"><canvas id="mrReasons"></canvas></div></div>
+   <div class="card"><h3>⑦ 이번 달 퇴사사유 세부 증감</h3><p class="mrnote">요청에 따라 ‘퇴사사유 세부’ 원문 기준 집계 · 비슷한 문구도 별개로 집계됨</p>${mrTable(['퇴사사유 세부','전월','당월','증감'],detailTop.slice(0,25).map(x=>[x[0],x[1],x[2],(x[3]>0?'+':'')+x[3]]))}</div></div>
+  <div class="card"><h3>⑧ 어느 Division에서 어떤 이유로 퇴사했나?</h3><p class="mrnote">이직처는 최소 3건인 회사명만 노출하며, 나머지는 ‘소수 비공개’ 처리합니다.</p>${mrTable(['소속(Division)','퇴사','퇴사사유','이직처'],divisionLines.filter(x=>x.rs.length).sort((a,b)=>b.rs.length-a.rs.length).map(x=>[x.d,x.rs.length,x.r.map(([r,n])=>r+' '+n+'명').join(' · '),x.destText]))}</div>
+  <div class="grid"><div class="card"><h3>⑨ 반복 자발퇴사가 발생한 Division</h3><p class="mrnote">최근 최대 6개월 자발퇴사 누적 순위. 권고사직·비자발·해고·징계·계약종료·정년 제외, 사유 미기재 제외. ‘주요 사유’는 제외 후 최빈 퇴사사유</p>${mrTable(['Division','최근 6개월','당월','최다 자발퇴사 사유'],repeat.map(x=>[x.d,x.v6.length,x.v.length,x.top?x.top[0]+' ('+x.top[1]+'명)':'-']))}</div>
+   <div class="card"><h3>⑩ 규모 대비 자발퇴사율이 높은 Division</h3><p class="mrnote">당월 자발퇴사 ÷ (전월말+당월말 재직자)/2 × 100. 전월·당월 자료가 있고 평균 5명 이상인 Division만 표시</p>${mrTable(['Division','자발퇴사','평균 HC','참고 퇴사율'],highRate.map(x=>[x.d,x.v.length,x.avg.toFixed(1),x.rate.toFixed(1)+'%']))}</div></div>
+  <div class="grid"><div class="card"><h3>⑪ 이직처 및 산업군 분석</h3><p class="mrnote">이직처 확인 ${known.length}/${current.length}명 (${mrPct(known.length,current.length)}) · 이직처 회사는 월간 3건 이상인 경우 공개</p>${mrTable(['이직처','당월','전월'],destinationRows)}<h3 style="margin-top:20px">이동 산업군</h3>${mrTable(['산업군','당월'],industry)}</div>
+   <div class="card"><h3>⑫ 반복적인 Division → 이직처 이동</h3><p class="mrnote">집계 시작 시점부터 기준월까지 같은 Division→회사 이동이 3건 이상이며, 서로 다른 2개월 이상 발생한 경우만 표시. 단순 이직 추세이며 인과관계·스카우트 여부를 뜻하지 않습니다.</p>${mrTable(['출발 Division','이직처','누적 인원','발생 월'],recurring.map(x=>[x.d,x.company,x.n,x.months.join(', ')]))}<p class="mrnote">예: MAZE → NX3가 기준에 해당하면 여기에 자동 표시됩니다. 실제 데이터로 확인되기 전에는 특정 이동이 발생했다고 단정하지 않습니다.</p></div></div>
+  <div class="card"><h3>분석 기준 및 주의 사항</h3><p class="mrnote">퇴사일 +1일을 집계월로 사용합니다. 이직처 관련 최소 3건 규칙은 소수 사례의 재식별 위험을 줄이기 위한 장치이지만 완전한 익명화는 아닙니다. 퇴사자는 퇴직면담 기록이 존재하는 경우만 Division 분석에 반영합니다. 권고사직 제외 분석은 퇴사사유와 세부 사유의 표기 키워드 기반이며 모든 자발·비자발 사유가 정확히 분류되었다는 뜻은 아닙니다. 조직 생성/소멸은 명칭 변경이나 원본 누락 가능성이 있습니다. 월별 명부 차분에 따른 ‘신규 등장’은 정식 입사 확정과 다르고, 월별 퇴직면담 건수와 HC 집계는 범위가 다를 수 있습니다.</p></div>`;
+  mrLine(report.querySelector('#mrReasons'),history,reasonChart);
+ }
+ controls.querySelector('#mrmonth').onchange=e=>{chosen=e.target.value;draw();};
+ controls.querySelector('#mrpdf').onclick=()=>{const old=document.title;document.title='HR_Insights_'+chosen;window.print();document.title=old;};
+ draw();
 }
 </script>
 </body>
