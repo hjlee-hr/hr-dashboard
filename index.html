@@ -536,6 +536,17 @@ html,body{overflow-x:clip!important;overflow-y:visible!important}
 #main .offstats{grid-template-columns:repeat(3,minmax(0,1fr))}
 @media(max-width:750px){#main .offstats{grid-template-columns:1fr!important}.off-range-filter label{flex:1 1 110px}.off-range-filter select{width:100%;max-width:none}.off-range-filter #fn{flex-basis:100%}}
 @media print{.off-head-controls{display:none!important}}
+
+/* v12: compact scannable editorial insight list */
+.insight-section{align-self:start}
+.insight-point{line-height:1.55;margin:9px 0!important;white-space:normal}
+.insight-subline{display:inline-block;color:#64748b;font-size:12px;line-height:1.5;padding-top:4px;font-weight:400}
+.insight-group{margin:15px 0 10px;padding:12px 12px 10px;background:#fff;border-radius:12px;border:1px solid #edf0f2}
+.insight-group-title{font-size:13px;font-weight:750;color:#263241;margin-bottom:7px}
+.insight-items{margin:0;padding-left:18px;list-style:disc}
+.insight-items li{padding:3px 0;font-size:13px;color:#465261;line-height:1.55;overflow-wrap:anywhere}
+.insight-bottom-note{padding:11px 2px 0;margin-bottom:0!important;border-top:1px solid #f1f2f4}
+@media(max-width:600px){.insight-group{padding:11px}.insight-items li{font-size:12.5px}}
 </style>
 </head>
 <body>
@@ -1114,7 +1125,7 @@ function monthlyReport(m){
       const f=flowDict[x.d];
       const exits=allByDiv[x.d]||0;
       const terms=f?`신규입사 추정 ${num(f['신규등장'])}명, 전입 ${num(f['전입'])}명, 전출 ${num(f['전출'])}명, 기록된 퇴사 ${exits}명`:`퇴사기록 ${exits}명, 신규입사·전배 원인별 자료 없음`;
-      workforceNotes.push(`${mrShortDiv(x.d)} 재직 인원 ${x.delta>=0?'+':''}${x.delta}명 (${x.p}→${x.n}명). 관련 변동: ${terms}. 명부 기반 참고치이며 순증감과 정확히 일치하지 않을 수 있습니다.`);
+      workforceNotes.push(`${mrShortDiv(x.d)} 재직 인원 ${x.delta>=0?'+':''}${x.delta}명 (${x.p}→${x.n}명). 관련 변동: ${terms}. `);
     });
     const added=changed.filter(x=>x.created),ended=changed.filter(x=>x.ended);
     if(added.length||ended.length)workforceNotes.push(`조직개편 관련 확인: 조직신설(추정) ${added.map(x=>mrShortDiv(x.d)).join(', ')||'없음'}, 조직폐지(추정) ${ended.map(x=>mrShortDiv(x.d)).join(', ')||'없음'}. 조직명 변경 또는 원본 누락 가능성이 있어 실제 개편 확정은 인사발령 기록으로 확인해야 합니다.`);
@@ -1133,19 +1144,16 @@ function monthlyReport(m){
   const dnum=(n,p)=>`${n}명 (전월 대비 ${n-p>=0?'+':''}${n-p}명)`;
   exitNotes.push(`당월 전체 퇴사: ${dnum(current.length,previous.length)}.`);
   exitNotes.push(`비자발·기타 퇴사자: ${dnum(nonVolCurrent.length,nonVolPrev.length)}. 자발퇴사자: ${dnum(volCur.length,previous.filter(mrVoluntary).length)}.`);
-  const describeExits=(rows,kind)=>{
+  const describeExits=(rows)=>{
     const group=mrEntries(mrCounts(rows,mrDiv)).slice(0,5);
     return group.map(([d,n])=>{
-      const detail=mrEntries(mrCounts(rows.filter(x=>mrDiv(x)===d),x=>mrClean(x['퇴사사유 세부'],mrClean(x['퇴사사유'],'사유 미기재')))).slice(0,3);
-      return `${mrShortDiv(d)} ${n}명 (${detail.map(([k,v])=>k+' '+v+'명').join(', ')})`;
-    }).join('; ');
+      const detail=mrEntries(mrCounts(rows.filter(x=>mrDiv(x)===d),x=>mrClean(x['퇴사사유 세부'],mrClean(x['퇴사사유'],'사유 미기재'))));
+      return `${mrShortDiv(d)} ${n}명 (${detail.map(([k,v])=>k+(v>1?' '+v+'명':'')).join(' · ')})`;
+    });
   };
-  if(volCur.length)exitNotes.push(`자발퇴사 소속·세부 사유: ${describeExits(volCur)}.`);
-  if(nonVolCurrent.length)exitNotes.push(`비자발·기타 퇴사 소속·세부 사유: ${describeExits(nonVolCurrent)}.`);
+  if(volCur.length)exitNotes.push({label:'자발퇴사 · 소속 및 세부 사유',items:describeExits(volCur)});
+  if(nonVolCurrent.length)exitNotes.push({label:'비자발·기타 퇴사 · 소속 및 세부 사유',items:describeExits(nonVolCurrent)});
   if(nonVolCurrent.length){
-    const reasons=mrEntries(mrCounts(nonVolCurrent,x=>mrClean(x['퇴사사유'],'사유 미기재')));
-    const divisionsTop=mrEntries(mrCounts(nonVolCurrent,mrDiv)).slice(0,3);
-    exitNotes.push(`비자발·기타 퇴사 사유: ${reasons.slice(0,4).map(([reason,n])=>reason+' '+n+'명').join(', ')}. 집중 소속: ${divisionsTop.map(([d,n])=>mrShortDiv(d)+' '+n+'명').join(', ')}.`);
     const probation=nonVolCurrent.filter(x=>/수습|시용|평가\s*미통과|미통과/.test(String(x['퇴사사유']||'')+' '+String(x['퇴사사유 세부']||''))).length;
     const recommend=nonVolCurrent.filter(x=>/권고/.test(String(x['퇴사사유']||'')+' '+String(x['퇴사사유 세부']||''))).length;
     if(probation||recommend)exitNotes.push(`별도 점검 필요: 수습 미통과 관련 ${probation}명, 권고사직 관련 ${recommend}명. 채용 적합도·온보딩·평가 과정과 조직 운영상의 변화를 함께 검토하세요.`);
@@ -1167,12 +1175,12 @@ function monthlyReport(m){
     const divisionExits=vol3.filter(r=>mrDiv(r)===x.d);
     voluntaryNotes.push(`최근 ${lastThree.length}개월간 ${mrShortDiv(x.d)} 자발퇴사 ${divisionExits.length}명 중 ${x.n}명이 ${x.company}(으)로 이동한 기록이 있습니다. 잔여 인력의 업무 만족도와 이탈 요인을 점검하세요. 1건은 반복 추세로 단정하지 않습니다.`);
   });
-  const insightSection=(title,notes,accent)=>`<section class="insight-section ${accent}"><h4>${esc(title)}</h4>${notes.map((n,i)=>`<p class="insight-point${i===0?' lead':''}"><span aria-hidden="true" class="insight-bullet">●</span>${esc(n)}</p>`).join('')}</section>`;
+  const insightSection=(title,notes,accent)=>`<section class="insight-section ${accent}"><h4>${esc(title)}</h4>${notes.map((n,i)=>typeof n==='object'&&n.items?`<div class="insight-group"><div class="insight-group-title">${esc(n.label)}</div><ul class="insight-items">${n.items.map(item=>`<li>${esc(item)}</li>`).join('')}</ul></div>`:`<p class="insight-point${i===0?' lead':''}"><span aria-hidden="true" class="insight-bullet">●</span><span>${esc(n).replace(/\n/g,'<br><span class="insight-subline">↳ ').replace(/<br><span class="insight-subline">↳ /g,'<br><span class="insight-subline">↳ ') + (n.includes('\n')?'</span>':'')}</span></p>`).join('')}</section>`;
   const orgNotes=hasOrg&&hasPrevOrg?'전월/당월 조직 스냅샷 비교':'과거 조직 인원 자료가 부족합니다';
   report.innerHTML=`<div class="mrprinthead"><h1>콩스튜디오코리아 월간 HR 인사이트</h1><p>${esc(chosen)} · 내부 분석용</p></div>
   <div class="mrhead"><div><div class="eb">MONTHLY PEOPLE INSIGHTS</div><h2>${esc(chosen)} 인력 · 조직 · 퇴사 · 휴직</h2></div><span class="mrnote">분석 단위: Division · 비교: 전월 및 최근 최대 6개월</span></div>
   <div class="mrkpis"><div><span>월말 재직자</span><b>${num(currentHC['월말 재직자수'])}명</b><small>전월 대비 ${net>=0?'+':''}${net}명</small></div><div><span>당월 신규 입사</span><b>${joiners}명</b><small>01_HC_Monthly 실적</small></div><div><span>당월 퇴사</span><b>${leavers}명</b><small>05_Offboarding · 퇴사현황 기준</small></div><div><span>휴직 인원</span><b>${hasOrg?curLeave+'명':'자료 없음'}</b><small>${hasOrg&&hasPrevOrg?'전월 대비 '+(curLeave-prevLeave>=0?'+':'')+(curLeave-prevLeave)+'명':'09_Monthly_Org 기준'}</small></div></div>
-  <div class="card insights-card"><h3>이번 달 주목할 인력 변화</h3><div class="insight-sections">${insightSection('재직자 · 휴직자 분석',workforceNotes,'workforce')}${insightSection('전체 퇴사자 분석 · 비자발퇴사 포함',exitNotes,'exits')}${insightSection('자발퇴사 심층 분석 · 대응 과제',voluntaryNotes,'voluntary')}</div><p class="mrnote">자발퇴사를 우선 관리하지만 비자발퇴사도 함께 분석합니다. 수습 미통과·권고사직 등은 기록된 퇴사사유 키워드에 따라 분류하며, 기타에는 분류 미확정 기록이 포함될 수 있습니다.</p></div>
+  <div class="card insights-card"><h3>이번 달 주목할 인력 변화</h3><div class="insight-sections">${insightSection('재직자 · 휴직자 분석',workforceNotes,'workforce')}${insightSection('전체 퇴사자 분석 · 비자발퇴사 포함',exitNotes,'exits')}${insightSection('자발퇴사 심층 분석 · 대응 과제',voluntaryNotes,'voluntary')}</div><p class="mrnote insight-bottom-note">※ 재직 인원 변동 원인은 명부 기반 참고치이며, 표시된 유입·전입·전출·퇴사 합계가 순증감과 일치하지 않을 수 있습니다. 자발퇴사를 우선 관리하되 비자발퇴사도 함께 분석합니다. 수습 미통과·권고사직 등은 기록된 사유로 분류하며 기타에는 분류 미확정 기록이 포함될 수 있습니다.</p></div>
   <div class="card"><h3>① 재직자 · Division별 인원 변화</h3><p class="mrnote">${esc(orgNotes)} · 조직 현황은 전월 스냅샷 비교 결과(조직신설/유지/조직폐지)를 의미하며 실제 인사발령 여부가 아닙니다. 조직신설/조직폐지는 월별 스냅샷 기반 추정이며, 공식 조직개편 기록이 확인된 상태를 의미하지 않습니다.</p>${hasOrg&&hasPrevOrg?mrTable(['Division','전월','당월','증감','조직 현황'],changed.map(x=>[mrShortDiv(x.d),x.p,x.n,(x.delta>0?'+':'')+x.delta,x.created?'조직신설 (추정)':x.ended?'조직폐지 (추정)':'유지'])):'<p class="mrnote">월별 조직 기록(09_Monthly_Org)이 충분하지 않습니다.</p>'}</div>
   <div class="grid"><div class="card"><h3>② Division별 신규입사 및 조직이동</h3><p class="mrnote">회사 전체 신규입사 실적은 01_HC_Monthly 기준입니다. Division별 신규입사는 월별 명부 신규 등장으로 추정하므로 공식 입사자 수와 다를 수 있습니다. 전입/전출은 별도 조직이동입니다.</p>${flowNow.length?mrTable(['Division','신규입사 추정','전입','전출'],movers.map(x=>[mrShortDiv(x.d),x.newNames,x.transIn,x.transOut])):`<p class="mrnote">${esc(flowHelp)} 이름 중복/복직 등은 인사 실적과 다를 수 있습니다.</p>`}</div>
    <div class="card"><h3>③ 신규입사와 자발퇴사가 함께 발생한 Division</h3><p class="mrnote">신규입사 추정·전입과 자발퇴사를 함께 확인해 인력 교체 징후를 살펴봅니다. 신규 등장은 공식 입사자 수와 다를 수 있고 전입은 별도 구분합니다. 참고 이탈률은 당월 자발퇴사 ÷ 평균 HC이며 공식 조직 퇴사율이 아닙니다.</p>${flowNow.length&&unstable.length?mrTable(['Division','신규입사 추정','전입','자발퇴사','참고 자발퇴사율'],unstable.map(x=>[mrShortDiv(x.d),x.newNames,x.transIn,x.exits,x.pressure===null?'-':x.pressure.toFixed(1)+'%'])):`<p class="mrnote">${flowNow.length?'선택한 월에는 신규 유입·전입과 자발퇴사가 동시에 확인된 Division이 없습니다. 다른 월을 선택하면 해당 기록을 확인할 수 있습니다.':esc(flowHelp)}</p>`}</div></div>
