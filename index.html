@@ -848,10 +848,10 @@ function summary(m){
   const org=latestOrg(),hc=D['01_HC_Monthly']||[],l=hc[hc.length-1];
   const cur=org.reduce((s,r)=>s+num(r['현재 HC']),0),prev=org.reduce((s,r)=>s+num(r['전월말 HC']),0),lv=(D['04_Longterm_Leave']||[]).length;
   m.insertAdjacentHTML('beforeend',`<div class="kpis">
-   ${kpi('users','현재 재직자수',cur+'명','won과 임재환님 제외 / 파견직 포함')}
-   ${kpi('briefcase','실제 근무인원',(cur-lv)+'명','현재 재직자수 − 휴직자 '+lv+'명')}
+   ${kpi('users','현재 재직자수',cur+'명','Won, 임재환 제외 / 파견직 포함')}
+   ${kpi('briefcase','현재 실제 근무인원',(cur-lv)+'명','현재 재직자수 − 휴직자 '+lv+'명')}
    ${kpi('trend','전월말 대비',sgn(cur-prev),'전월말 '+prev+'명')}
-   ${l?kpi('userplus','신규입사자',esc(l['신규입사자'])+'명','')+kpi('userminus','퇴사자',esc(l['퇴사자'])+'명','말일 퇴사자 미포함'):''}</div>`);
+   ${l?kpi('userplus','당월 신규입사자',esc(l['신규입사자'])+'명','')+kpi('userminus','당월 퇴사자',esc(l['퇴사자'])+'명','말일 퇴사자 미포함'):''}</div>`);
   const sn=leaveSoon(),up=sn.filter(x=>x.n>=0),od=sn.filter(x=>x.n<0);
   const sc=D['07_Schedule']||[],has=sc.length>0;
   const in30=t=>{const d=dday(t);return d!==null&&d>=0&&d<=30;};
