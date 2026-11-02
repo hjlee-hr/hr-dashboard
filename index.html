@@ -547,6 +547,22 @@ html,body{overflow-x:clip!important;overflow-y:visible!important}
 .insight-items li{padding:3px 0;font-size:13px;color:#465261;line-height:1.55;overflow-wrap:anywhere}
 .insight-bottom-note{padding:11px 2px 0;margin-bottom:0!important;border-top:1px solid #f1f2f4}
 @media(max-width:600px){.insight-group{padding:11px}.insight-items li{font-size:12.5px}}
+
+/* v14: immediate accessible loading feedback */
+#boot{background:rgba(245,245,247,.96);backdrop-filter:blur(8px);z-index:200}
+.loadpanel{width:min(420px,calc(100% - 40px));background:white;border:1px solid #e9eaf0;border-radius:24px;box-shadow:0 22px 80px rgba(15,23,42,.09);padding:35px 30px;text-align:center;display:flex;align-items:center;flex-direction:column;gap:13px}
+.loadpanel strong{font-size:19px;color:#111827}
+#boot-message{font-size:14px;color:#667085;line-height:1.6}
+.loadspin{width:34px;height:34px;border:3px solid #e9edf7;border-top-color:#2f65e8;border-radius:50%;animation:spinning .85s linear infinite}
+@keyframes spinning{to{transform:rotate(360deg)}}
+.loadtrack{height:5px;border-radius:5px;width:100%;overflow:hidden;background:#edf1f8;margin-top:8px}
+.loadtrack span{width:35%;height:100%;background:#2f65e8;border-radius:5px;display:block;animation:loadslide 1.65s ease-in-out infinite}
+@keyframes loadslide{0%{transform:translateX(-130%)}100%{transform:translateX(380%)}}
+#boot-hint{margin:2px 0 0;font-size:12px;font-weight:400;color:#8b95a1}
+.login-progress{margin:9px 0 0;font-size:13px;color:#475467}
+#go:disabled{opacity:.65;cursor:wait}
+@media(prefers-reduced-motion:reduce){.loadspin,.loadtrack span{animation:none}}
+
 </style>
 </head>
 <body>
@@ -556,7 +572,7 @@ html,body{overflow-x:clip!important;overflow-y:visible!important}
   <label for="pw">비밀번호</label>
   <div class="pwbox"><input id="pw" type="password" autocomplete="current-password" placeholder="비밀번호"><button id="eye" type="button" aria-label="비밀번호 보기">👁</button></div>
   <button class="p" id="go">들어가기</button>
-  <div id="err"></div>
+  <div id="err" role="status" aria-live="polite"></div><p id="login-progress" class="login-progress hide" role="status" aria-live="polite">인사 데이터를 불러오는 중입니다. 잠시만 기다려 주세요.</p>
   <p class="note">브라우저 탭을 닫으면 다시 로그인이 필요합니다.</p>
 </div>
 <div id="app" class="hide">
@@ -577,7 +593,7 @@ html,body{overflow-x:clip!important;overflow-y:visible!important}
   </div>
   <div id="foot"></div>
 </div>
-<div id="boot">불러오는 중…</div>
+<div id="boot" role="status" aria-live="polite"><div class="loadpanel"><div class="loadspin" aria-hidden="true"></div><strong id="boot-title">HR 대시보드에 연결하고 있습니다</strong><div id="boot-message">데이터를 안전하게 불러오는 중입니다.</div><div class="loadtrack"><span></span></div><p id="boot-hint">데이터 양과 Google 서버 상태에 따라 시간이 걸릴 수 있습니다.</p></div></div>
 <script>
 // ▼ Apps Script 웹 앱 URL(…/exec)을 아래 따옴표 안에 붙여넣으세요
 const API_URL = 'https://script.google.com/macros/s/AKfycbxIlFNg7SvwYqatND2Cjsxly7gtiPlytHRmJTFrXBMMtYAUealo6P2mGkNGn6xnmeZwiw/exec';
@@ -655,32 +671,83 @@ const uniq = (a,k) => [...new Set(a.map(r=>r[k]).filter(Boolean))];
 const sgn = n => n>0?`<span class="up">+${n}</span>`:n<0?`<span class="dn">${n}</span>`:'0';
 
 let PW='';
-const api=async pw=>{const r=await fetch(API_URL,{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify({password:pw})});return r.json();};
+let loginBusy=false;
+let loginTimers=[];
+let loginStarted=0;
+const api=async pw=>{
+  const controller=new AbortController();
+  const timer=setTimeout(()=>controller.abort(),45000);
+  try{
+    const r=await fetch(API_URL,{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify({password:pw}),signal:controller.signal,cache:'no-store'});
+    if(!r.ok)throw new Error('HTTP '+r.status);
+    return await r.json();
+  }finally{clearTimeout(timer);}
+};
 const unAuto=()=>document.documentElement.classList.remove('auto');
+function setLoadingText(title,message){
+  $('boot-title').textContent=title;
+  $('boot-message').textContent=message;
+  $('login-progress').textContent=message;
+}
+function finishLoginLoading(){
+  loginTimers.forEach(clearTimeout);loginTimers=[];
+  loginBusy=false;
+  $('go').disabled=false;
+  $('go').textContent='들어가기';
+  $('login-progress').classList.add('hide');
+  $('boot').style.display='';
+  unAuto();
+}
 async function login(pw,auto){
+  if(loginBusy)return;
   if(!API_URL||API_URL.includes('여기에')){unAuto();$('err').textContent='웹 앱 주소가 설정되지 않았습니다. index.html의 API_URL에 주소를 넣어주세요.';return;}
-  $('err').textContent=auto?'':'확인 중…';
+  loginBusy=true;
+  loginStarted=performance.now();
+  $('go').disabled=true;
+  $('go').textContent='연결 중…';
+  $('err').textContent='';
+  $('login-progress').classList.remove('hide');
+  setLoadingText('HR 대시보드에 연결하고 있습니다','비밀번호를 확인하고 최신 인사 데이터를 불러오는 중입니다.');
+  // 로그인 과정이 진행 중임을 첫 프레임부터 명확히 표시합니다.
+  if(auto){document.documentElement.classList.add('auto');}
+  else{$('boot').style.display='flex';}
+  loginTimers.push(setTimeout(()=>{
+    if(loginBusy)setLoadingText('데이터를 불러오고 있습니다','3초 이상 소요되고 있습니다. Google 스프레드시트의 데이터를 확인하는 중입니다.');
+  },3000));
+  loginTimers.push(setTimeout(()=>{
+    if(loginBusy)setLoadingText('연결이 평소보다 지연되고 있습니다','Google 서버 응답이 늦어지고 있습니다. 화면을 닫거나 로그인 버튼을 다시 누르지 않아도 됩니다.');
+  },10000));
   let got=false;
   try{
+    // 로딩 안내가 먼저 그려지게 한 프레임을 확보합니다.
+    await new Promise(resolve=>requestAnimationFrame(()=>resolve()));
     const j=await api(pw);
     if(!j.ok){
       if(auto){try{sessionStorage.removeItem('pw');}catch(e){}}
-      unAuto();$('err').textContent=j.error==='locked'?'시도 횟수 초과. 10분 후 다시 시도하세요.':'비밀번호가 올바르지 않습니다.';return;
+      $('err').textContent=j.error==='locked'?'시도 횟수 초과. 10분 후 다시 시도하세요.':'비밀번호가 올바르지 않습니다.';
+      return;
     }
-    got=true;D=j.data;PW=pw;try{sessionStorage.setItem('pw',pw);}catch(e){}
-    $('login').classList.add('hide');$('app').classList.remove('hide');init();syncTopbar();unAuto();
+    got=true;
+    D=j.data;PW=pw;
+    setLoadingText('화면을 준비하고 있습니다','인사 데이터를 모두 받았습니다. 차트와 보고서를 구성하고 있습니다.');
+    await new Promise(resolve=>requestAnimationFrame(()=>resolve()));
+    // 기존 동작 보존: 데이터를 불러온 다음에만 화면을 표시합니다.
+    init();syncTopbar();
+    try{sessionStorage.setItem('pw',pw);}catch(e){}
+    $('login').classList.add('hide');$('app').classList.remove('hide');
   }catch(e){
-    unAuto();
-    $('err').textContent=got?'화면을 그리는 중 오류가 발생했습니다: '+e.message:'서버 연결 오류. 웹 앱 주소(API_URL)와 배포 설정을 확인해 주세요.';
+    $('err').textContent=got?'화면을 그리는 중 오류가 발생했습니다: '+e.message:
+      (e.name==='AbortError'?'서버 응답이 45초 이상 지연되었습니다. 잠시 후 다시 시도해 주세요.':'서버 연결 오류. 웹 앱 주소와 배포 설정을 확인해 주세요.');
     if(got){$('login').classList.remove('hide');$('app').classList.add('hide');}
-  }
+  }finally{finishLoginLoading();}
 }
+
 function logout(){
   try{sessionStorage.removeItem('pw');sessionStorage.removeItem('tab');}catch(e){}
   killCharts();D=null;PW='';
   $('main').innerHTML='';$('nav').innerHTML='';$('lkm').classList.add('hide');
   $('app').classList.add('hide');$('login').classList.remove('hide');unAuto();
-  $('pw').value='';$('pw').type='password';$('err').textContent='';
+  $('pw').value='';$('pw').type='password';$('err').textContent='';$('login-progress').classList.add('hide');
   window.scrollTo(0,0);$('pw').focus();
 }
 async function reloadData(){
