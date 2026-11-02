@@ -580,6 +580,13 @@ html,body{overflow-x:clip!important;overflow-y:visible!important}
 .hc-basis-note{margin:-4px 0 20px;padding:10px 14px;color:var(--mu);background:#f8fafc;border-radius:12px;font-size:12px;line-height:1.65}
 .hc-basis-note strong{color:var(--tx);font-weight:700}
 @media(max-width:640px){.hc-basis-note{font-size:11.5px;margin:0 0 16px}}
+
+/* v17: 요약 카드 확장형 명단 */
+.people-expand{cursor:pointer;transition:box-shadow .15s ease,border-color .15s ease}
+.people-expand:hover,.people-expand:focus-visible{border-color:#94a3b8!important;box-shadow:0 4px 18px rgba(15,23,42,.10)!important;outline:none}
+.people-expand .kt:after{content:'명단 보기 ▾';display:block;margin-top:6px;font-size:11px;color:#64748b;font-weight:600}
+.people-expand[aria-expanded="true"] .kt:after{content:'명단 닫기 ▴'}
+#summary-person-detail{margin-top:-3px}#summary-person-detail .tw{margin-top:12px}
 </style>
 </head>
 <body>
@@ -964,6 +971,40 @@ function summary(m){
    ${kpi('briefcase','현재 실제 근무인원',(cur-lv)+'명','현재 재직자수 − 휴직자 '+lv+'명')}
    ${kpi('trend','전월말 대비',sgn(cur-prev),'전월말 '+prev+'명')}
    ${l?kpi('userplus','당월 신규입사자',esc(l['신규입사자'])+'명','당월 1일~오늘까지 입사한 인원')+kpi('userminus','당월 퇴사자',esc(l['퇴사자'])+'명','당월 1일~전일까지 퇴사자 (말일 퇴사자는 익월 퇴사자로 표기)'):''}</div><p class="hc-basis-note">인원 현황의 인원수는 <strong>4대보험 가입자 기준</strong>입니다.</p>`);
+  // 명단은 원본 API의 출처를 구분합니다. 집계 숫자를 명단 개수로 대체하지 않습니다.
+  const now=new Date(),ym=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0');
+  const today=Date.UTC(now.getFullYear(),now.getMonth(),now.getDate());
+  const hires=(D['11_CurrentMonth_People']||[]).filter(x=>{
+    const d=pd(x['입사일']);return d!==null&&d<=today&&new Date(d).toISOString().slice(0,7)===ym;
+  }).map(x=>({name:x['이름'],div:x['Division'],team:x['Team'],date:x['입사일']}));
+  const exits=(D['05_Offboarding']||[]).filter(x=>{
+    const d=pd(x['퇴사일']);if(d===null)return false;
+    const effective=d+86400000;
+    return effective<today&&new Date(effective).toISOString().slice(0,7)===ym;
+  }).map(x=>({name:x['성명'],div:x['소속'],team:x['팀']||x['Team']||'',date:x['퇴사일']}));
+  const listHtml=(arr,title,dateLabel,missing)=>`<h3>${title} (${arr.length}명)</h3>${arr.length?`<div class="tw"><table><thead><tr><th>이름</th><th>소속</th><th>${dateLabel}</th></tr></thead><tbody>${arr.map(x=>`<tr><td>${esc(x.name)}</td><td>${esc(x.div)}</td><td>${esc(x.date)}</td></tr>`).join('')}</tbody></table></div>`:`<p class="mrnote">${missing}</p>`}`;
+  const detail=document.createElement('section');detail.id='summary-person-detail';detail.className='card hide';detail.setAttribute('aria-live','polite');
+  m.querySelector('.kpis').after(detail);
+  m.querySelectorAll('.kpis>.kpi').forEach(node=>{
+    const label=node.querySelector('.kt>span')?.textContent||'';
+    const kind=label.includes('신규입사자')?'hire':label.includes('당월 퇴사자')?'exit':null;
+    if(!kind)return;
+    node.classList.add('people-expand');node.setAttribute('role','button');node.tabIndex=0;
+    node.setAttribute('aria-expanded','false');node.setAttribute('aria-controls','summary-person-detail');
+    const toggle=()=>{
+      const isOpen=!detail.classList.contains('hide')&&detail.dataset.kind===kind;
+      m.querySelectorAll('.people-expand').forEach(n=>n.setAttribute('aria-expanded','false'));
+      if(isOpen){detail.classList.add('hide');detail.innerHTML='';return;}
+      detail.dataset.kind=kind;detail.classList.remove('hide');node.setAttribute('aria-expanded','true');
+      detail.innerHTML=kind==='hire'
+        ?listHtml(hires,'당월 신규입사자 명단','입사일',D['11_CurrentMonth_People']===undefined?'입사자 명단 데이터가 연결되지 않았습니다. Apps Script 집계 시트와 API를 확인해 주세요.':'해당 기준의 입사자가 없거나 최신 원본 명단이 반영되지 않았습니다.')
+        :listHtml(exits,'당월 퇴사자 명단','퇴사일','집계 기준에 해당하는 퇴사자가 없습니다.');
+      const reported=num(l?.[kind==='hire'?'신규입사자':'퇴사자']);
+      const count=kind==='hire'?hires.length:exits.length;
+      detail.insertAdjacentHTML('beforeend',`<p class="mrnote">카드 집계 ${reported}명 · 명단 ${count}명. 서로 다르면 원본 데이터와 집계 기준을 확인해 주세요. 퇴사는 퇴사일 다음날을 집계 기준일로 사용하고, 전일까지 반영합니다.</p>`);
+    };
+    node.onclick=toggle;node.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();toggle();}};
+  });
   const sn=leaveSoon(),up=sn.filter(x=>x.n>=0),od=sn.filter(x=>x.n<0);
   const sc=D['07_Schedule']||[],has=sc.length>0;
   const in30=t=>{const d=dday(t);return d!==null&&d>=0&&d<=30;};
