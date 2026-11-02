@@ -1273,8 +1273,19 @@ function monthlyReport(m){
   const movers=movementRows.filter(x=>x.newNames!==null).sort((a,b)=>b.newNames-a.newNames||b.transIn-a.transIn);
   const unstable=movementRows.filter(x=>x.newNames!==null&&(x.newNames+x.transIn)>0&&x.exits>0).map(x=>({...x,avgHC:old[x.d]>0&&now[x.d]>0?(old[x.d]+now[x.d])/2:null,pressure:old[x.d]>0&&now[x.d]>0?100*x.exits/((old[x.d]+now[x.d])/2):null})).sort((a,b)=>(b.pressure??-1)-(a.pressure??-1)||(b.newNames+b.transIn+b.exits)-(a.newNames+a.transIn+a.exits));
   const rest=mrEntries(mrCounts((D['04_Longterm_Leave']||[]),'휴직종류'));
-  const curLeave=Object.values(leaveNow).reduce((a,b)=>a+b,0),prevLeave=Object.values(leaveOld).reduce((a,b)=>a+b,0);
-  const leaveRows=[...new Set([...Object.keys(leaveNow),...Object.keys(leaveOld)])].map(d=>[d,leaveOld[d]||0,leaveNow[d]||0,(leaveNow[d]||0)-(leaveOld[d]||0),now[d]?mrPct(leaveNow[d]||0,now[d]):'-']).filter(x=>x[1]>0||x[2]>0).sort((a,b)=>b[2]-a[2]);
+  const snapshotLeave=Object.values(leaveNow).reduce((a,b)=>a+b,0),prevLeave=Object.values(leaveOld).reduce((a,b)=>a+b,0);
+  // 현재 명부는 현재 월에만 사용합니다. 과거 월의 휴직 인원으로 소급하지 않습니다.
+  const seoulMonth=new Date().toLocaleDateString('sv-SE',{timeZone:'Asia/Seoul'}).slice(0,7);
+  const isLiveMonth=chosen===seoulMonth;
+  const liveLeaveRows=Array.isArray(D['04_Longterm_Leave'])?D['04_Longterm_Leave']:null;
+  const useLiveLeave=isLiveMonth&&liveLeaveRows!==null;
+  const leaveDivLive={};
+  if(useLiveLeave)liveLeaveRows.forEach(r=>{const d=mrClean(r['Division'],'미지정');leaveDivLive[d]=(leaveDivLive[d]||0)+1;});
+  const curLeave=useLiveLeave?liveLeaveRows.length:snapshotLeave;
+  const hasLeaveData=useLiveLeave||hasOrg;
+  const leaveSource=useLiveLeave?'04_Longterm_Leave · 현재 휴직 명부':'09_Monthly_Org · 월별 집계';
+  const shownLeaveNow=useLiveLeave?leaveDivLive:leaveNow;
+  const leaveRows=[...new Set([...Object.keys(shownLeaveNow),...Object.keys(leaveOld)])].map(d=>[d,hasPrevOrg?leaveOld[d]||0:'-',shownLeaveNow[d]||0,hasPrevOrg?(shownLeaveNow[d]||0)-(leaveOld[d]||0):'-',now[d]?mrPct(shownLeaveNow[d]||0,now[d]):'-']).filter(x=>x[2]>0||(typeof x[1]==='number'&&x[1]>0)).sort((a,b)=>b[2]-a[2]);
   const known=current.filter(x=>mrKnownDest(x)),knownDest=mrEntries(mrCounts(known,x=>mrKnownDest(x))),industry=mrEntries(mrCounts(known,'산업군'));
   const oldDest=mrCounts(previous.filter(x=>mrKnownDest(x)),x=>mrKnownDest(x));
   const destinationRows=knownDest.filter(([,n])=>mrSafeDest(n)).map(([k,n])=>[k,n,oldDest[k]||0]);
@@ -1294,8 +1305,8 @@ function monthlyReport(m){
     const added=changed.filter(x=>x.created),ended=changed.filter(x=>x.ended);
     if(added.length||ended.length)workforceNotes.push(`조직개편 관련 확인: 조직신설(추정) ${added.map(x=>mrShortDiv(x.d)).join(', ')||'없음'}, 조직폐지(추정) ${ended.map(x=>mrShortDiv(x.d)).join(', ')||'없음'}. 조직명 변경 또는 원본 누락 가능성이 있어 실제 개편 확정은 인사발령 기록으로 확인해야 합니다.`);
   }else workforceNotes.push('Division별 전월 비교 자료가 부족하여 조직 증감의 원인을 분석할 수 없습니다.');
-  if(hasOrg&&hasPrevOrg)workforceNotes.push(`휴직 인원: 전월 ${prevLeave}명 → 당월 ${curLeave}명 (${curLeave-prevLeave>=0?'+':''}${curLeave-prevLeave}명). 이 수치는 재직 인원 변동과 별도로 검토하세요.`);
-  else if(hasOrg)workforceNotes.push(`현재 휴직 ${curLeave}명입니다. 전월 자료가 없어 증감은 계산하지 않았습니다.`);
+  if(hasLeaveData&&hasPrevOrg)workforceNotes.push(`휴직 인원: 전월 ${prevLeave}명 → 당월 ${curLeave}명 (${curLeave-prevLeave>=0?'+':''}${curLeave-prevLeave}명). ${useLiveLeave?'당월은 현재 휴직 명부, 전월은 월별 조직 집계 기준입니다.':'월별 조직 집계 기준입니다.'} 재직 인원 변동과 별도로 검토하세요.`);
+  else if(hasLeaveData)workforceNotes.push(`${isLiveMonth?'현재':'선택 월'} 휴직 ${curLeave}명입니다. 전월 자료가 없어 증감은 계산하지 않았습니다.`);
   // 04_Longterm_Leave는 현재 시점 명부이므로 과거 선택 월의 신규 휴직자라고 단정하지 않습니다.
   const leaveDetails=D['04_Longterm_Leave']||[];
   const newlyListed=leaveDetails.filter(r=>mrMonth(r['휴직시작일'])===chosen);
@@ -1343,12 +1354,12 @@ function monthlyReport(m){
   const orgNotes=hasOrg&&hasPrevOrg?'전월/당월 조직 스냅샷 비교':'과거 조직 인원 자료가 부족합니다';
   report.innerHTML=`<div class="mrprinthead"><h1>콩스튜디오코리아 월간 HR 인사이트</h1><p>${esc(chosen)} · 내부 분석용</p></div>
   <div class="mrhead"><div><div class="eb">MONTHLY PEOPLE INSIGHTS</div><h2>${esc(chosen)} 인력 · 조직 · 퇴사 · 휴직</h2></div><span class="mrnote">분석 단위: Division · 비교: 전월 및 최근 최대 6개월</span></div>
-  <div class="mrkpis"><div><span>월말 재직자</span><b>${num(currentHC['월말 재직자수'])}명</b><small>전월 대비 ${net>=0?'+':''}${net}명</small></div><div><span>당월 신규 입사</span><b>${joiners}명</b><small>01_HC_Monthly 실적</small></div><div><span>당월 퇴사</span><b>${leavers}명</b><small>05_Offboarding · 퇴사현황 기준</small></div><div><span>휴직 인원</span><b>${hasOrg?curLeave+'명':'자료 없음'}</b><small>${hasOrg&&hasPrevOrg?'전월 대비 '+(curLeave-prevLeave>=0?'+':'')+(curLeave-prevLeave)+'명':'09_Monthly_Org 기준'}</small></div></div>
+  <div class="mrkpis"><div><span>월말 재직자</span><b>${num(currentHC['월말 재직자수'])}명</b><small>전월 대비 ${net>=0?'+':''}${net}명</small></div><div><span>당월 신규 입사</span><b>${joiners}명</b><small>01_HC_Monthly 실적</small></div><div><span>당월 퇴사</span><b>${leavers}명</b><small>05_Offboarding · 퇴사현황 기준</small></div><div><span>휴직 인원</span><b>${hasLeaveData?curLeave+'명':'자료 없음'}</b><small>${hasLeaveData&&hasPrevOrg?'전월 대비 '+(curLeave-prevLeave>=0?'+':'')+(curLeave-prevLeave)+'명 · '+leaveSource:hasLeaveData?leaveSource:'09_Monthly_Org 월별 집계 필요'}</small></div></div>
   <div class="card insights-card"><h3>이번 달 주목할 인력 변화</h3><div class="insight-sections">${insightSection('재직자 · 휴직자 분석',workforceNotes,'workforce')}${insightSection('전체 퇴사자 분석 · 비자발퇴사 포함',exitNotes,'exits')}${insightSection('자발퇴사 심층 분석 · 대응 과제',voluntaryNotes,'voluntary')}</div><p class="mrnote insight-bottom-note">※ 재직 인원 변동 원인은 명부 기반 참고치이며, 표시된 유입·전입·전출·퇴사 합계가 순증감과 일치하지 않을 수 있습니다. 자발퇴사를 우선 관리하되 비자발퇴사도 함께 분석합니다. 수습 미통과·권고사직 등은 기록된 사유로 분류하며 기타에는 분류 미확정 기록이 포함될 수 있습니다.</p></div>
   <div class="card"><h3>① 재직자 · Division별 인원 변화</h3><p class="mrnote">${esc(orgNotes)} · 조직 현황은 전월 스냅샷 비교 결과(조직신설/유지/조직폐지)를 의미하며 실제 인사발령 여부가 아닙니다. 조직신설/조직폐지는 월별 스냅샷 기반 추정이며, 공식 조직개편 기록이 확인된 상태를 의미하지 않습니다.</p>${hasOrg&&hasPrevOrg?mrTable(['Division','전월','당월','증감','조직 현황'],changed.map(x=>[mrShortDiv(x.d),x.p,x.n,(x.delta>0?'+':'')+x.delta,x.created?'조직신설 (추정)':x.ended?'조직폐지 (추정)':'유지'])):'<p class="mrnote">월별 조직 기록(09_Monthly_Org)이 충분하지 않습니다.</p>'}</div>
   <div class="grid"><div class="card"><h3>② Division별 신규입사 및 조직이동</h3><p class="mrnote">회사 전체 신규입사 실적은 01_HC_Monthly 기준입니다. Division별 신규입사는 월별 명부 신규 등장으로 추정하므로 공식 입사자 수와 다를 수 있습니다. 전입/전출은 별도 조직이동입니다.</p>${flowNow.length?mrTable(['Division','신규입사 추정','전입','전출'],movers.map(x=>[mrShortDiv(x.d),x.newNames,x.transIn,x.transOut])):`<p class="mrnote">${esc(flowHelp)} 이름 중복/복직 등은 인사 실적과 다를 수 있습니다.</p>`}</div>
    <div class="card"><h3>③ 신규입사와 자발퇴사가 함께 발생한 Division</h3><p class="mrnote">신규입사 추정·전입과 자발퇴사를 함께 확인해 인력 교체 징후를 살펴봅니다. 신규 등장은 공식 입사자 수와 다를 수 있고 전입은 별도 구분합니다. 참고 이탈률은 당월 자발퇴사 ÷ 평균 HC이며 공식 조직 퇴사율이 아닙니다.</p>${flowNow.length&&unstable.length?mrTable(['Division','신규입사 추정','전입','자발퇴사','참고 자발퇴사율'],unstable.map(x=>[mrShortDiv(x.d),x.newNames,x.transIn,x.exits,x.pressure===null?'-':x.pressure.toFixed(1)+'%'])):`<p class="mrnote">${flowNow.length?'선택한 월에는 신규 유입·전입과 자발퇴사가 동시에 확인된 Division이 없습니다. 다른 월을 선택하면 해당 기록을 확인할 수 있습니다.':esc(flowHelp)}</p>`}</div></div>
-  <div class="grid"><div class="card"><h3>④ 휴직 인원 · Division별 변화</h3><p class="mrnote">휴직자 수 및 재직자 대비 휴직 비중. 전월/당월 모두 0명인 조직은 제외. 09_Monthly_Org의 기준월별 집계</p>${hasOrg?mrTable(['Division','전월 휴직','당월 휴직','증감','휴직 비중'],leaveRows.map(x=>[mrShortDiv(x[0]),...x.slice(1)])):'<p class="mrnote">09_Monthly_Org 데이터가 없습니다.</p>'}</div>
+  <div class="grid"><div class="card"><h3>④ 휴직 인원 · Division별 변화</h3><p class="mrnote">휴직자 수 및 재직자 대비 휴직 비중. 전월/당월 모두 0명인 조직은 제외. 당월은 ${esc(leaveSource)} 기준${useLiveLeave?'(과거 월에는 적용하지 않음)':''}</p>${hasLeaveData?mrTable(['Division','전월 휴직','당월 휴직','증감','휴직 비중'],leaveRows.map(x=>[mrShortDiv(x[0]),...x.slice(1)])):'<p class="mrnote">선택 월에 대한 휴직 데이터가 없습니다. 09_Monthly_Org 집계를 확인해 주세요.</p>'}</div>
    <div class="card"><h3>⑤ 현재 휴직 유형 구성</h3><p class="mrnote">04_Longterm_Leave의 현재 명부 기준 · 과거 월별 유형 구성과 구분</p>${mrTable(['휴직 유형','인원'],rest)}</div></div>
   <div class="grid"><div class="card"><h3>⑥ 퇴사사유의 월별 추이</h3><p class="mrnote">최근 최대 6개월 · 자발퇴사(주황색 굵은 선)와 비자발퇴사·기타(회색)를 구분하여 표시. 자발퇴사가 핵심 관리 지표입니다.</p><div class="cv"><canvas id="mrReasons"></canvas></div></div>
    <div class="card"><h3>⑦ 이번 달 자발퇴사 세부 사유 증감</h3><p class="mrnote">자발퇴사 건의 ‘퇴사사유 세부’ 원문만 비교 · 권고사직·해고·계약종료 등 제외 · 유사 문구도 별개로 집계</p>${mrTable(['퇴사사유 세부','전월','당월','증감'],detailTop.slice(0,25).map(x=>[x[0],x[1],x[2],(x[3]>0?'+':'')+x[3]]))}</div></div>
