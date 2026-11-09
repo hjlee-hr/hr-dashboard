@@ -587,6 +587,29 @@ html,body{overflow-x:clip!important;overflow-y:visible!important}
 .people-expand .kt:after{content:'명단 보기 ▾';display:block;margin-top:6px;font-size:11px;color:#64748b;font-weight:600}
 .people-expand[aria-expanded="true"] .kt:after{content:'명단 닫기 ▴'}
 #summary-person-detail{margin-top:-3px}#summary-person-detail .tw{margin-top:12px}
+
+/* v19 예정·알림: 네 표 공통 정렬 · 열 너비 · 구분선 · 모바일 스크롤 */
+.notice-card{scroll-margin-top:calc(var(--actual-topbar-h, 74px) + 18px);padding:22px 24px!important;}
+.notice-card h3{font-size:17px;line-height:1.4;margin:0 0 16px;font-weight:750;letter-spacing:-.015em;}
+.notice-card .tw{border:1px solid #eef0f3;border-radius:14px;overflow-x:auto;max-width:100%;}
+.notice-card .notice-table{width:100%;min-width:810px;table-layout:fixed;border-collapse:collapse;font-size:13px;}
+.notice-card .notice-table th,.notice-card .notice-table td{box-sizing:border-box;padding:12px 10px;text-align:left!important;vertical-align:middle;line-height:1.5;white-space:nowrap;border-bottom:1px solid #f0f1f3;}
+.notice-card .notice-table thead th{background:#f8f9fb;color:#64748b;font-size:12px;font-weight:650;}
+.notice-card .notice-table tbody tr:last-child td{border-bottom:0;}
+.notice-card .notice-table tbody tr:hover{background:#fafbfc;}
+.notice-card .notice-table th:nth-child(1),.notice-card .notice-table td:nth-child(1){width:58px;text-align:center!important;color:#64748b;}
+.notice-card .notice-table th:nth-child(2),.notice-card .notice-table td:nth-child(2){width:106px;font-weight:650;color:var(--tx);}
+.notice-card .notice-table th:nth-child(3),.notice-card .notice-table td:nth-child(3){width:125px;}
+.notice-card .notice-table th:nth-child(4),.notice-card .notice-table td:nth-child(4){width:120px;}
+.notice-card .notice-table th:nth-child(5),.notice-card .notice-table td:nth-child(5){width:120px;}
+.notice-card .notice-table th:nth-child(n+6),.notice-card .notice-table td:nth-child(n+6){text-align:center!important;}
+.notice-card .notice-table th:nth-child(6),.notice-card .notice-table td:nth-child(6){width:115px;}
+.notice-card .notice-table th:nth-child(7),.notice-card .notice-table td:nth-child(7){width:110px;}
+.notice-card .notice-table th:nth-child(8),.notice-card .notice-table td:nth-child(8){width:115px;}
+.notice-card .mrnote,.notice-card>p{font-size:12px!important;line-height:1.6;margin:12px 0 0!important;color:var(--mu)!important;}
+.notice-focused{box-shadow:0 0 0 2px rgba(37,99,235,.22),0 8px 24px rgba(17,24,39,.08)!important;transition:box-shadow .2s ease;}
+@media(max-width:760px){.notice-card{padding:17px!important}.notice-card h3{font-size:15px;margin-bottom:12px}.notice-card .notice-table{font-size:12px;min-width:790px}.notice-card .notice-table th,.notice-card .notice-table td{padding:11px 8px}}
+
 </style>
 </head>
 <body>
@@ -689,6 +712,25 @@ window.addEventListener('resize',syncTopbar);
 
 let goDiv='';
 const goTab=k=>$('nav').querySelector(`[data-k="${k}"]`).click();
+// 요약 KPI에서 예정·알림 표로 직접 이동할 때 사용할 대상 ID
+let noticeFocusTarget='';
+function goNoticeSection(section){
+  noticeFocusTarget=section;
+  goTab('notice');
+}
+function focusNoticeSection(){
+  if(!noticeFocusTarget)return;
+  const id=noticeFocusTarget;
+  noticeFocusTarget='';
+  requestAnimationFrame(()=>requestAnimationFrame(()=>{
+    const target=document.getElementById('notice-'+id);
+    if(!target)return;
+    target.scrollIntoView({behavior:'auto',block:'start'});
+    target.classList.add('notice-focused');
+    window.setTimeout(()=>target.classList.remove('notice-focused'),1800);
+  }));
+}
+
 const goOrg=d=>{goDiv=d;goTab('org');};
 const num = v => Number(String(v||'').replace(/[^0-9.\-]/g,''))||0;
 const esc = s => String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
@@ -853,6 +895,7 @@ function show(t,b){
   killCharts();const m=$('main');m.innerHTML='';
   VIEW[t.k](m);
   syncTopbar();window.scrollTo(0,0);
+  if(t.k==='notice')focusNoticeSection();
 }
 $('logout').onclick=logout;
 $('refresh').onclick=reloadData;
@@ -1024,7 +1067,18 @@ function summary(m){
   const leaveAll=has?sc.filter(x=>x['구분']==='퇴사예정').length:SC(org,'퇴사예정자');
   const tile=(ic,t,n,sub)=>kpi(ic,t,n+'명',sub,true);
   const al=card(m,'🔔 예정·알림 <small style="color:var(--mu);font-weight:400">(클릭하면 예정·알림 탭으로 이동)</small>',`<div class="kpis" style="margin:0">${tile('rotate','복직 예정',up.length,od.length?`30일 이내 · 만료 지남 ${od.length}명`:'30일 이내')}${tile('userplus','입사 예정',has?c30('입사예정'):hireAll,has?`30일 이내 · 전체 ${hireAll}명`:'전체 예정 인원')}${tile('userminus','퇴사 예정',has?c30('퇴사예정'):leaveAll,has?`30일 이내 · 전체 ${leaveAll}명`:'전체 예정 인원')}${has?tile('file','계약 만료',c30('계약만료'),'30일 이내 · 계약직·파견직'):''}</div>`);
-  al.querySelectorAll('[data-go]').forEach(x=>x.onclick=()=>goTab('notice'));
+  // 카드 종류에 따라 해당 표로 바로 이동 (기존 숫자 집계는 유지)
+  const noticeTargets={'복직 예정':'return','입사 예정':'hire','퇴사 예정':'exit','계약 만료':'contract'};
+  al.querySelectorAll('[data-go]').forEach(x=>{
+    const title=x.querySelector('.kt>span')?.textContent?.trim()||'';
+    const section=noticeTargets[title];
+    if(!section)return;
+    x.setAttribute('role','button');
+    x.tabIndex=0;
+    x.setAttribute('aria-label',`${title} 명단으로 이동`);
+    x.onclick=()=>goNoticeSection(section);
+    x.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();goNoticeSection(section);}};
+  });
   copyCard(m);
   const h=hc;
   if(h.length){chartA(m,h,cur-lv);chartB(m,h);tableC(m,h);}
@@ -1042,7 +1096,7 @@ const leaveSoon=()=>(D['04_Longterm_Leave']||[]).map(x=>({...x,n:dday(x['휴직�
 function shortenedWorkCard(m){
   const rows=D['12_Shortened_Work'];
   if(!Array.isArray(rows)){
-    card(m,'단축근로 · 육아기 / 임신기','<p class="cd">단축근로 데이터가 아직 연결되지 않았습니다. 12_Shortened_Work 시트와 웹 API를 확인해 주세요.</p>');
+    markNoticeCard(card(m,'단축근로 · 육아기 / 임신기','<p class="cd">단축근로 데이터가 아직 연결되지 않았습니다. 12_Shortened_Work 시트와 웹 API를 확인해 주세요.</p>'),'shortened');
     return;
   }
   const today=new Date(), day=[today.getFullYear(),String(today.getMonth()+1).padStart(2,'0'),String(today.getDate()).padStart(2,'0')].join('-');
@@ -1052,24 +1106,37 @@ function shortenedWorkCard(m){
   }).map(x=>({...x,state:String(x['시작일'])>day?'예정':'진행 중'}));
   valid.sort((a,b)=>a.state===b.state?String(a['시작일']).localeCompare(String(b['시작일'])):a.state==='진행 중'?-1:1);
   const ongoing=valid.filter(x=>x.state==='진행 중').length,planned=valid.length-ongoing;
-  const body=valid.length?`<div class="tw"><table><thead><tr><th>순번</th><th>성함</th><th>Division</th><th>Team</th><th>종류</th><th>시작일</th><th>종료일</th><th>상태</th></tr></thead><tbody>${valid.map((x,i)=>`<tr><td>${i+1}</td><td>${esc(x['성함'])}</td><td>${esc(x['Division'])}</td><td>${esc(x['Team'])}</td><td>${esc(x['종류'])}</td><td>${esc(x['시작일'])}</td><td>${esc(x['종료일'])}</td><td><span class="pill ${x.state==='진행 중'?'w':'g'}">${x.state}</span></td></tr>`).join('')}</tbody></table></div>`:'<p class="cd">현재 예정 또는 진행 중인 단축근로 대상자가 없습니다.</p>';
-  card(m,`단축근로 현황 (${valid.length}명 · 진행 중 ${ongoing}명 / 예정 ${planned}명)`,body+'<p class="mrnote">※ 종료일이 지난 대상자는 표시하지 않습니다. 기준일은 화면을 조회하는 오늘입니다.</p>');
+  const body=valid.length?`<div class="tw"><table><thead><tr><th>순번</th><th>이름</th><th>Division</th><th>Team</th><th>구분</th><th>시작일</th><th>종료일</th><th>상태</th></tr></thead><tbody>${valid.map((x,i)=>`<tr><td>${i+1}</td><td>${esc(x['성함'])}</td><td>${esc(x['Division'])}</td><td>${esc(x['Team'])}</td><td>${esc(x['종류'])}</td><td>${esc(x['시작일'])}</td><td>${esc(x['종료일'])}</td><td><span class="pill ${x.state==='진행 중'?'w':'g'}">${x.state}</span></td></tr>`).join('')}</tbody></table></div>`:'<p class="cd">현재 예정 또는 진행 중인 단축근로 대상자가 없습니다.</p>';
+  markNoticeCard(card(m,`단축근로 현황 (${valid.length}명 · 진행 중 ${ongoing}명 / 예정 ${planned}명)`,body+'<p class="mrnote">※ 종료일이 지난 대상자는 표시하지 않습니다. 기준일은 화면을 조회하는 오늘입니다.</p>'),'shortened');
+}
+
+/* 예정·알림 카드 공통 서식: 카드 ID, 표 스타일, 열 간격, 보조 안내 */
+function markNoticeCard(c,section){
+  c.id='notice-'+section;
+  c.classList.add('notice-card');
+  const table=c.querySelector('table');
+  if(table){
+    table.classList.add('notice-table');
+    table.setAttribute('aria-label',(c.querySelector('h3')?.textContent||'예정·알림')+' 명단');
+    table.querySelectorAll('thead th').forEach(th=>th.setAttribute('scope','col'));
+  }
+  return c;
 }
 
 /* 예정·알림 탭 */
 function sched(m){
   const sn=leaveSoon();
   const pill=n=>n<0?'<span class="pill r">만료 지남</span>':n<=7?'<span class="pill r">7일 이내</span>':'<span class="pill w">30일 이내</span>';
-  card(m,`복직 예정 (30일 이내 · 만료 지난 분 포함 ${sn.length}명)`,sn.length?`<div class="tw"><table><thead><tr><th>순번</th><th>이름</th><th>Division</th><th>Team</th><th>휴직종류</th><th>휴직만료일</th><th>D-Day</th><th>알림</th></tr></thead><tbody>${sn.map((x,i)=>`<tr><td>${i+1}</td><td>${esc(x['이름'])}</td><td>${esc(x['Division'])}</td><td>${esc(x['Team'])}</td><td>${esc(x['휴직종류'])}</td><td>${esc(x['휴직만료일'])}</td><td>${ddTxt(x['휴직만료일'])}</td><td>${pill(x.n)}</td></tr>`).join('')}</tbody></table></div>`:'30일 이내 복직 예정자가 없습니다.');
+  markNoticeCard(card(m,`복직 예정 (30일 이내 · 만료 지난 분 포함 ${sn.length}명)`,sn.length?`<div class="tw"><table><thead><tr><th>순번</th><th>이름</th><th>Division</th><th>Team</th><th>구분</th><th>휴직만료일</th><th>D-Day</th><th>상태</th></tr></thead><tbody>${sn.map((x,i)=>`<tr><td>${i+1}</td><td>${esc(x['이름'])}</td><td>${esc(x['Division'])}</td><td>${esc(x['Team'])}</td><td>${esc(x['휴직종류'])}</td><td>${esc(x['휴직만료일'])}</td><td>${ddTxt(x['휴직만료일'])}</td><td>${pill(x.n)}</td></tr>`).join('')}</tbody></table></div>`:'30일 이내 복직 예정자가 없습니다.'),'return');
   shortenedWorkCard(m);
   const sc=D['07_Schedule']||[];
   if(sc.length){schedTables(m,sc);return;}
   const org=latestOrg(),ex=[];
   org.forEach(r=>String(r['퇴사예정자']||'').split(',').map(x=>x.trim()).filter(x=>x&&x!=='-').forEach(n=>ex.push({n,d:r['Division'],t:r['Team']})));
-  card(m,`퇴사 예정 (${ex.length}명)`,(ex.length?`<div class="tw"><table><thead><tr><th>순번</th><th>이름</th><th>Division</th><th>Team</th></tr></thead><tbody>${ex.map((x,i)=>`<tr><td>${i+1}</td><td>${esc(x.n)}</td><td>${esc(x.d)}</td><td>${esc(x.t)}</td></tr>`).join('')}</tbody></table></div>`:'퇴사 예정자가 없습니다.')+'<p style="color:var(--mu);font-size:13px;margin:10px 0 0">※ 퇴사 예정일은 현재 시트에 없어 날짜는 표시되지 않습니다.</p>');
+  markNoticeCard(card(m,`퇴사 예정 (${ex.length}명)`,(ex.length?`<div class="tw"><table><thead><tr><th>순번</th><th>이름</th><th>Division</th><th>Team</th></tr></thead><tbody>${ex.map((x,i)=>`<tr><td>${i+1}</td><td>${esc(x.n)}</td><td>${esc(x.d)}</td><td>${esc(x.t)}</td></tr>`).join('')}</tbody></table></div>`:'퇴사 예정자가 없습니다.')+'<p style="color:var(--mu);font-size:13px;margin:10px 0 0">※ 퇴사 예정일은 현재 시트에 없어 날짜는 표시되지 않습니다.</p>'),'exit');
   const HK=hk(org),hr=[];
   if(HK)org.forEach(r=>String(r['입사예정자']||'').split(',').map(x=>x.trim()).filter(x=>x&&x!=='-').forEach(n=>hr.push({n,d:r['Division'],t:r['Team']})));
-  if(HK)card(m,`입사 예정 (${hr.length}명)`,(hr.length?`<div class="tw"><table><thead><tr><th>순번</th><th>이름</th><th>Division</th><th>Team</th></tr></thead><tbody>${hr.map((x,i)=>`<tr><td>${i+1}</td><td>${esc(x.n)}</td><td>${esc(x.d)}</td><td>${esc(x.t)}</td></tr>`).join('')}</tbody></table></div>`:'입사 예정자가 없습니다.')+'<p style="color:var(--mu);font-size:13px;margin:10px 0 0">※ 입사 예정자는 재직자수에 포함되지 않습니다.</p>');
+  if(HK)markNoticeCard(card(m,`입사 예정 (${hr.length}명)`,(hr.length?`<div class="tw"><table><thead><tr><th>순번</th><th>이름</th><th>Division</th><th>Team</th></tr></thead><tbody>${hr.map((x,i)=>`<tr><td>${i+1}</td><td>${esc(x.n)}</td><td>${esc(x.d)}</td><td>${esc(x.t)}</td></tr>`).join('')}</tbody></table></div>`:'입사 예정자가 없습니다.')+'<p style="color:var(--mu);font-size:13px;margin:10px 0 0">※ 입사 예정자는 재직자수에 포함되지 않습니다.</p>'),'hire');
   else{const nt=org.filter(r=>String(r['특이사항']||'').trim());
   card(m,'특이사항',nt.length?`<div class="tw"><table><thead><tr><th>Division</th><th>Team</th><th>특이사항</th></tr></thead><tbody>${nt.map(r=>`<tr><td>${esc(r['Division'])}</td><td>${esc(r['Team'])}</td><td class="wr">${esc(r['특이사항'])}</td></tr>`).join('')}</tbody></table></div>`:'입력된 특이사항이 없습니다.');}
 }
@@ -1085,7 +1152,7 @@ function schedTables(m,sc){
     let r=sc.filter(x=>x['구분']===k);
     if(ex)r=r.filter(x=>{const d=dday(x['예정일']);return d!==null&&d>=-30&&d<=30;});
     r.sort((a,b)=>(pd(a['예정일'])??9e15)-(pd(b['예정일'])??9e15));
-    card(m,`${t} (${r.length}명)`,(r.length?`<div class="tw"><table><thead><tr><th>순번</th><th>이름</th><th>Division</th><th>Team</th>${ex?'<th>구분</th>':''}<th>${ex?'계약만료일':'예정일'}</th><th>D-Day</th><th>알림</th></tr></thead><tbody>${r.map((x,i)=>`<tr><td>${i+1}</td><td>${esc(x['이름'])}</td><td>${esc(x['Division'])}</td><td>${esc(x['Team'])}</td>${ex?`<td>${esc(({'계약직':'계약','계약직(인턴)':'계약','파견직':'파견'})[x['고용형태']]||x['고용형태'])}</td>`:''}<td>${esc(x['예정일']||'-')}</td><td>${ddp(x['예정일'],past)}</td><td>${pl(x['예정일'])}</td></tr>`).join('')}</tbody></table></div>`:'해당자가 없습니다.')+`<p style="color:var(--mu);font-size:13px;margin:10px 0 0">${note}</p>`);
+    markNoticeCard(card(m,`${t} (${r.length}명)`,(r.length?`<div class="tw"><table><thead><tr><th>순번</th><th>이름</th><th>Division</th><th>Team</th><th>구분</th><th>${ex?'계약만료일':'예정일'}</th><th>D-Day</th><th>상태</th></tr></thead><tbody>${r.map((x,i)=>`<tr><td>${i+1}</td><td>${esc(x['이름'])}</td><td>${esc(x['Division'])}</td><td>${esc(x['Team'])}</td><td>${ex?esc(({'계약직':'계약','계약직(인턴)':'계약','파견직':'파견'})[x['고용형태']]||x['고용형태']):'—'}</td><td>${esc(x['예정일']||'-')}</td><td>${ddp(x['예정일'],past)}</td><td>${pl(x['예정일'])}</td></tr>`).join('')}</tbody></table></div>`:'해당자가 없습니다.')+`<p style="color:var(--mu);font-size:13px;margin:10px 0 0">${note}</p>`),k==='입사예정'?'hire':k==='퇴사예정'?'exit':'contract');
   });
 }
 
