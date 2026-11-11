@@ -610,6 +610,30 @@ html,body{overflow-x:clip!important;overflow-y:visible!important}
 .notice-focused{box-shadow:0 0 0 2px rgba(37,99,235,.22),0 8px 24px rgba(17,24,39,.08)!important;transition:box-shadow .2s ease;}
 @media(max-width:760px){.notice-card{padding:17px!important}.notice-card h3{font-size:15px;margin-bottom:12px}.notice-card .notice-table{font-size:12px;min-width:790px}.notice-card .notice-table th,.notice-card .notice-table td{padding:11px 8px}}
 
+
+/* v19.5: 장기휴직 및 월간 HR 인사이트 표 공통 가독성 */
+.leave-panel .leave-table th,
+.leave-panel .leave-table td,
+.mrreport .tw table th,
+.mrreport .tw table td {
+  text-align:center!important;
+  vertical-align:middle;
+}
+.leave-panel .leave-table{width:100%;min-width:780px;}
+.leave-panel .leave-table td{white-space:nowrap;}
+.leave-panel .leave-table th{white-space:nowrap;}
+.leave-panel .leave-table tbody tr:hover{background:#fafafa;}
+.leave-deadline{display:inline-flex;justify-content:center;align-items:center;min-width:72px;max-width:100%;padding:4px 9px;border-radius:999px;font-size:12px;font-weight:650;line-height:1.35;white-space:nowrap;}
+.leave-deadline.neutral{color:#64748b;background:#f1f5f9;}
+.leave-deadline.soon{color:#92400e;background:#fef3c7;}
+.leave-deadline.urgent{color:#b91c1c;background:#fee2e2;}
+.leave-deadline.overdue{color:#9a3412;background:#ffedd5;}
+@media(max-width:760px){
+  .leave-panel .tw{overflow-x:auto;-webkit-overflow-scrolling:touch;}
+  .leave-panel .leave-table{min-width:780px;}
+  .mrreport .tw{overflow-x:auto;-webkit-overflow-scrolling:touch;}
+}
+
 </style>
 </head>
 <body>
@@ -1241,11 +1265,35 @@ function hcTab(m){
 
 /* 5. 휴직 */
 function leave(m){
-  const r=(D['04_Longterm_Leave']||[]).map(x=>({...x,'복직 D-Day':ddTxt(x['휴직만료일'],x['복직 D-Day'])}));
-  card(m,`당월 휴직중 (${r.length}명)`,tbl(r,['이름','Division','Team','휴직종류','휴직시작일','휴직만료일','복직 D-Day'],true));
+  // 숫자 D-Day를 기준으로 내림차순: D-60 → D-30 → D-7 → D-Day → 만료
+  const r=(D['04_Longterm_Leave']||[]).map(x=>({
+    ...x,_leaveDDay:dday(x['휴직만료일']),
+    '복직 D-Day':ddTxt(x['휴직만료일'],x['복직 D-Day'])
+  })).sort((a,b)=>{
+    const av=a._leaveDDay,bv=b._leaveDDay;
+    if(av===null&&bv===null)return 0;
+    if(av===null)return 1;
+    if(bv===null)return -1;
+    return bv-av;
+  });
+  const fields=['이름','Division','Team','휴직종류','휴직시작일','휴직만료일'];
+  const status=x=>{
+    const n=x._leaveDDay;
+    if(n===null)return '<span class="leave-deadline neutral">날짜 확인 필요</span>';
+    if(n<0)return '<span class="leave-deadline overdue">복직 확인 필요</span>';
+    if(n<=7)return '<span class="leave-deadline urgent">7일 이내</span>';
+    if(n<=30)return '<span class="leave-deadline soon">30일 이내</span>';
+    return '<span class="leave-deadline neutral">예정</span>';
+  };
+  const html=r.length?`<div class="tw"><table class="leave-table"><thead><tr><th>순번</th>${fields.map(c=>`<th>${esc(c)}</th>`).join('')}<th>복직 D-Day</th><th>상태</th></tr></thead><tbody>${r.map((x,i)=>`<tr><td>${i+1}</td>${fields.map(c=>`<td>${esc(x[c]??'-')}</td>`).join('')}<td>${esc(x['복직 D-Day'])}</td><td>${status(x)}</td></tr>`).join('')}</tbody></table></div>`:'데이터가 없습니다.';
+  const first=card(m,`당월 휴직중 (${r.length}명)`,html);
+  first.classList.add('leave-panel');
   const o={};r.forEach(x=>{const d=x['Division']||'미지정';o[d]=(o[d]||0)+1;});
   const e=Object.entries(o).sort((a,b)=>b[1]-a[1]);
-  if(e.length)card(m,'Division별 휴직 인원',`<div class="tw"><table><thead><tr><th>Division</th><th class="n">인원</th></tr></thead><tbody>${e.map(x=>`<tr><td>${esc(x[0])}</td><td class="n">${x[1]}명</td></tr>`).join('')}<tr class="div"><td>합계</td><td class="n">${r.length}명</td></tr></tbody></table></div>`);
+  if(e.length){
+    const second=card(m,'Division별 휴직 인원',`<div class="tw"><table class="leave-table"><thead><tr><th>Division</th><th>인원</th></tr></thead><tbody>${e.map(x=>`<tr><td>${esc(x[0])}</td><td>${x[1]}명</td></tr>`).join('')}<tr class="div"><td>합계</td><td>${r.length}명</td></tr></tbody></table></div>`);
+    second.classList.add('leave-panel');
+  }
 }
 function tbl(r,cols,idx){
   if(!r.length)return '데이터가 없습니다.';
