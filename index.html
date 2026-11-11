@@ -1152,7 +1152,7 @@ function schedTables(m,sc){
     let r=sc.filter(x=>x['구분']===k);
     if(ex)r=r.filter(x=>{const d=dday(x['예정일']);return d!==null&&d>=-30&&d<=30;});
     r.sort((a,b)=>(pd(a['예정일'])??9e15)-(pd(b['예정일'])??9e15));
-    markNoticeCard(card(m,`${t} (${r.length}명)`,(r.length?`<div class="tw"><table><thead><tr><th>순번</th><th>이름</th><th>Division</th><th>Team</th><th>고용형태</th><th>${ex?'계약만료일':'예정일'}</th><th>D-Day</th><th>상태</th></tr></thead><tbody>${r.map((x,i)=>`<tr><td>${i+1}</td><td>${esc(x['이름'])}</td><td>${esc(x['Division'])}</td><td>${esc(x['Team'])}</td><td>${esc(x['고용형태']||'-')}</td><td>${esc(x['예정일']||'-')}</td><td>${ddp(x['예정일'],past)}</td><td>${pl(x['예정일'])}</td></tr>`).join('')}</tbody></table></div>`:'해당자가 없습니다.')+`<p style="color:var(--mu);font-size:13px;margin:10px 0 0">${note}</p>`),k==='입사예정'?'hire':k==='퇴사예정'?'exit':'contract');
+    markNoticeCard(card(m,`${t} (${r.length}명)`,(r.length?`<div class="tw"><table><thead><tr><th>순번</th><th>이름</th><th>Division</th><th>Team</th><th>${k==='퇴사예정'?'근속년수':'고용형태'}</th><th>${ex?'계약만료일':'예정일'}</th><th>D-Day</th><th>상태</th></tr></thead><tbody>${r.map((x,i)=>`<tr><td>${i+1}</td><td>${esc(x['이름'])}</td><td>${esc(x['Division'])}</td><td>${esc(x['Team'])}</td><td>${esc(k==='퇴사예정'?(x['근속년수']||'-'):(x['고용형태']||'-'))}</td><td>${esc(x['예정일']||'-')}</td><td>${ddp(x['예정일'],past)}</td><td>${pl(x['예정일'])}</td></tr>`).join('')}</tbody></table></div>`:'해당자가 없습니다.')+`<p style="color:var(--mu);font-size:13px;margin:10px 0 0">${note}</p>`),k==='입사예정'?'hire':k==='퇴사예정'?'exit':'contract');
   });
 }
 
@@ -1311,6 +1311,37 @@ function mrDiv(x){return mrClean(x['소속'],'미지정');}
 function mrKnownDest(x){const v=mrClean(x['이직처']);return /^(미기재|미공유|미공개|비공개|미확인|없음|확인\s*불가|모름|미정|해당없음|정보없음|불명)$/i.test(v)?null:v;}
 function mrMap(rows,field){const o={};rows.forEach(x=>{const k=mrClean(x['Division'],'미지정');o[k]=(o[k]||0)+num(x[field]);});return o;}
 function mrSafeDest(n){return n>=1;}
+/* v19.2: 근속년수 문자열을 연 단위로 해석합니다. 알 수 없는 형식은 분석에서 제외합니다. */
+function hrTenureYears(value){
+ const s=String(value??'').trim().replace(/,/g,'');
+ if(!s||s==='-'||s==='미기재')return null;
+ const yearMatch=s.match(/(\d+(?:\.\d+)?)\s*년/),monthMatch=s.match(/(\d+(?:\.\d+)?)\s*개월?/),dayMatch=s.match(/(\d+)\s*일/);
+ if(yearMatch||monthMatch||dayMatch){
+  const years=yearMatch?Number(yearMatch[1]):0,months=monthMatch?Number(monthMatch[1]):0,days=dayMatch?Number(dayMatch[1]):0;
+  const result=years+months/12+days/365.25;
+  return Number.isFinite(result)&&result>=0&&result<=70?result:null;
+ }
+ // 숫자만 표시된 경우에는 소수점 연수로 처리합니다.
+ if(/^\d+(?:\.\d+)?$/.test(s)){
+  const n=Number(s);return n>=0&&n<=70?n:null;
+ }
+ return null;
+}
+function hrTenureByDivision(records){
+ const grouped={};
+ records.forEach(r=>{
+  const y=hrTenureYears(r['근속년수']);if(y===null)return;
+  const division=mrShortDiv(mrDiv(r));(grouped[division]??=[]).push(y);
+ });
+ return Object.entries(grouped).map(([division,values])=>{
+  values.sort((a,b)=>a-b);
+  const len=values.length;
+  const average=values.reduce((a,b)=>a+b,0)/len;
+  const median=len%2?values[(len-1)/2]:(values[len/2-1]+values[len/2])/2;
+  const early=values.filter(x=>x<1).length;
+  return [division,len,average.toFixed(1)+'년',median.toFixed(1)+'년',early+'명 ('+(early/len*100).toFixed(1)+'%)'];
+ }).sort((a,b)=>b[1]-a[1]);
+}
 function monthlyReport(m){
  const hc=(D['01_HC_Monthly']||[]).filter(r=>mrMonth(r['기준월'])).slice().sort((a,b)=>mrMonth(a['기준월']).localeCompare(mrMonth(b['기준월'])));
  if(!hc.length){card(m,'월간 HR 인사이트','01_HC_Monthly 데이터가 없습니다.');return;}
@@ -1454,6 +1485,7 @@ function monthlyReport(m){
    <div class="card"><h3>⑩ 규모 대비 자발퇴사율이 높은 Division</h3><p class="mrnote">당월 자발퇴사 ÷ (전월말+당월말 재직자)/2 × 100. 전월·당월 자료가 있고 평균 5명 이상인 Division만 표시</p>${mrTable(['Division','자발퇴사','평균 HC','참고 퇴사율'],highRate.map(x=>[mrShortDiv(x.d),x.v.length,x.avg.toFixed(1),x.rate.toFixed(1)+'%']))}</div></div>
   <div class="grid"><div class="card"><h3>⑪ 이직처 및 산업군 분석</h3><p class="mrnote">이직처 확인 ${known.length}/${current.length}명 (${mrPct(known.length,current.length)}) · 이직처 회사는 월간 1건 이상부터 표시 (내부 전용)</p>${mrTable(['이직처','당월','전월'],destinationRows)}<h3 style="margin-top:20px">이동 산업군</h3>${mrTable(['산업군','당월'],industry)}</div>
    <div class="card"><h3>⑫ Division → 이직처 이동 기록</h3><p class="mrnote">집계 시작 시점부터 기준월까지 같은 Division→회사 이동 기록이 1건 이상이면 표시. 1건은 반복 이직으로 해석하지 않습니다. 상단 주목할 변화 문장은 최근 최대 3개월을 따로 분석합니다. 단순 이직 추세이며 인과관계·스카우트 여부를 뜻하지 않습니다.</p>${mrTable(['출발 Division','이직처','누적 인원','발생 월'],recurring.map(x=>[mrShortDiv(x.d),x.company,x.n,x.months.join(', ')]))}<p class="mrnote">예: MAZE → NX3가 기준에 해당하면 여기에 자동 표시됩니다. 실제 데이터로 확인되기 전에는 특정 이동이 발생했다고 단정하지 않습니다.</p></div></div>
+  <div class="card"><h3>⑬ Division별 퇴사자의 근속기간 분석</h3><p class="mrnote">선택한 월의 퇴사자 중 ‘근속년수’가 기록된 사람을 대상으로 합니다. 평균과 중앙값을 함께 확인하며, 1년 미만 퇴사 비중은 조기이탈 점검용 참고 지표입니다.</p>${(() => {const tenureRows=hrTenureByDivision(current);const valid=tenureRows.reduce((sum,r)=>sum+r[1],0);return tenureRows.length?`<p class="mrnote">근속기간 분석 가능 ${valid}명 / 당월 전체 퇴사 ${current.length}명</p>${mrTable(['Division','근속정보 보유 퇴사자','평균 근속','중앙 근속','1년 미만 퇴사'],tenureRows)}`:'<p class="mrnote">선택한 월의 퇴사 기록에서 근속년수를 확인할 수 없습니다. 05_Offboarding의 근속년수 열을 확인해 주세요.</p>';})()}</div>
   <div class="card"><h3>분석 기준 및 주의 사항</h3><p class="mrnote">퇴사일 +1일을 집계월로 사용합니다. 이직처 회사명은 1건부터 보여주므로 개인 식별 가능성이 커집니다. 이 화면과 원본 API 응답은 인사 권한이 있는 내부 사용자에게만 제공해야 합니다. 개인별 인사정보가 공개 GitHub Pages의 API 응답에서 노출되지 않도록 서버 권한 관리가 필요합니다. 퇴사자는 퇴직면담 기록이 존재하는 경우만 Division 분석에 반영합니다. 권고사직 제외 분석은 퇴사사유와 세부 사유의 표기 키워드 기반이며 모든 자발·비자발 사유가 정확히 분류되었다는 뜻은 아닙니다. 조직 생성/소멸은 명칭 변경이나 원본 누락 가능성이 있습니다. 월별 명부 차분에 따른 ‘신규 등장’은 정식 입사 확정과 다르고, 월별 퇴직면담 건수와 HC 집계는 범위가 다를 수 있습니다.</p></div>`;
   mrLine(report.querySelector('#mrReasons'),history,reasonChart);
  }
