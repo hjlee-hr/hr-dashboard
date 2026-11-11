@@ -1265,16 +1265,16 @@ function hcTab(m){
 
 /* 5. 휴직 */
 function leave(m){
-  // 숫자 D-Day를 기준으로 내림차순: D-60 → D-30 → D-7 → D-Day → 만료
+  // 복직 예정일이 가까운 순서(오름차순): D-Day → D-7 → D-30 → D-60. 지난 날짜와 미확인 날짜는 뒤로.
   const r=(D['04_Longterm_Leave']||[]).map(x=>({
     ...x,_leaveDDay:dday(x['휴직만료일']),
     '복직 D-Day':ddTxt(x['휴직만료일'],x['복직 D-Day'])
   })).sort((a,b)=>{
     const av=a._leaveDDay,bv=b._leaveDDay;
+    const rank=n=>n===null?2:n<0?1:0;
+    if(rank(av)!==rank(bv))return rank(av)-rank(bv);
     if(av===null&&bv===null)return 0;
-    if(av===null)return 1;
-    if(bv===null)return -1;
-    return bv-av;
+    return av-bv;
   });
   const fields=['이름','Division','Team','휴직종류','휴직시작일','휴직만료일'];
   const status=x=>{
