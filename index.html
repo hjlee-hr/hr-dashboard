@@ -1342,6 +1342,32 @@ function hrTenureByDivision(records){
   return [division,len,average.toFixed(1)+'년',median.toFixed(1)+'년',early+'명 ('+(early/len*100).toFixed(1)+'%)'];
  }).sort((a,b)=>b[1]-a[1]);
 }
+/* v19.4: Division별 근속 1년 미만 자발퇴사 집중도.
+   분모는 해당 조직의 '근속기간 정보가 확인된 자발퇴사자'입니다.
+   1년 미만 재직자 전체 대비 공식 퇴사율이 아닙니다. */
+function hrEarlyVoluntaryByDivision(records){
+ const grouped=new Map();
+ records.forEach(r=>{
+  const division=mrShortDiv(mrDiv(r));
+  if(!grouped.has(division))grouped.set(division,{all:0,known:0,vol:0,volKnown:0,earlyVol:0,reasons:new Map()});
+  const v=grouped.get(division);
+  v.all++;
+  const years=hrTenureYears(r['근속년수']);
+  if(years!==null)v.known++;
+  if(!mrVoluntary(r))return;
+  v.vol++;
+  if(years===null)return;
+  v.volKnown++;
+  if(years>=1)return;
+  v.earlyVol++;
+  const reason=mrClean(r['퇴사사유 세부'],'세부 사유 미기재');
+  v.reasons.set(reason,(v.reasons.get(reason)||0)+1);
+ });
+ return [...grouped.entries()].filter(([,x])=>x.volKnown>0).map(([division,x])=>{
+  const top=[...x.reasons.entries()].sort((a,b)=>b[1]-a[1]||a[0].localeCompare(b[0],'ko'))[0];
+  return {division,...x,ratio:100*x.earlyVol/x.volKnown,topReason:top?`${top[0]} (${top[1]}명)`:'-'};
+ }).sort((a,b)=>b.ratio-a.ratio||b.earlyVol-a.earlyVol||a.division.localeCompare(b.division,'ko'));
+}
 function monthlyReport(m){
  const hc=(D['01_HC_Monthly']||[]).filter(r=>mrMonth(r['기준월'])).slice().sort((a,b)=>mrMonth(a['기준월']).localeCompare(mrMonth(b['기준월'])));
  if(!hc.length){card(m,'월간 HR 인사이트','01_HC_Monthly 데이터가 없습니다.');return;}
@@ -1486,6 +1512,21 @@ function monthlyReport(m){
   <div class="grid"><div class="card"><h3>⑪ 이직처 및 산업군 분석</h3><p class="mrnote">이직처 확인 ${known.length}/${current.length}명 (${mrPct(known.length,current.length)}) · 이직처 회사는 월간 1건 이상부터 표시 (내부 전용)</p>${mrTable(['이직처','당월','전월'],destinationRows)}<h3 style="margin-top:20px">이동 산업군</h3>${mrTable(['산업군','당월'],industry)}</div>
    <div class="card"><h3>⑫ Division → 이직처 이동 기록</h3><p class="mrnote">집계 시작 시점부터 기준월까지 같은 Division→회사 이동 기록이 1건 이상이면 표시. 1건은 반복 이직으로 해석하지 않습니다. 상단 주목할 변화 문장은 최근 최대 3개월을 따로 분석합니다. 단순 이직 추세이며 인과관계·스카우트 여부를 뜻하지 않습니다.</p>${mrTable(['출발 Division','이직처','누적 인원','발생 월'],recurring.map(x=>[mrShortDiv(x.d),x.company,x.n,x.months.join(', ')]))}<p class="mrnote">예: MAZE → NX3가 기준에 해당하면 여기에 자동 표시됩니다. 실제 데이터로 확인되기 전에는 특정 이동이 발생했다고 단정하지 않습니다.</p></div></div>
   <div class="card"><h3>⑬ Division별 퇴사자의 근속기간 분석</h3><p class="mrnote">선택한 월의 퇴사자 중 ‘근속년수’가 기록된 사람을 대상으로 합니다. 평균과 중앙값을 함께 확인하며, 1년 미만 퇴사 비중은 조기이탈 점검용 참고 지표입니다.</p>${(() => {const tenureRows=hrTenureByDivision(current);const valid=tenureRows.reduce((sum,r)=>sum+r[1],0);return tenureRows.length?`<p class="mrnote">근속기간 분석 가능 ${valid}명 / 당월 전체 퇴사 ${current.length}명</p>${mrTable(['Division','근속정보 보유 퇴사자','평균 근속','중앙 근속','1년 미만 퇴사'],tenureRows)}`:'<p class="mrnote">선택한 월의 퇴사 기록에서 근속년수를 확인할 수 없습니다. 05_Offboarding의 근속년수 열을 확인해 주세요.</p>';})()}</div>
+  <div class="card"><h3>⑭ 근속 1년 미만 자발퇴사 집중 분석</h3>
+    <p class="mrnote">선택한 월 · <strong>권고사직·해고·계약종료·수습 미통과 등 비자발퇴사 제외</strong>. 기준: 퇴사사유 및 세부 사유로 자발퇴사를 분류한 뒤, 근속년수가 확인된 자발퇴사자 중 1년 미만 비중을 계산합니다.</p>
+    ${(() => {
+      const rows=hrEarlyVoluntaryByDivision(current);
+      if(!rows.length)return '<p class="mrnote">선택 월에 근속정보가 확인된 자발퇴사자가 없습니다.</p>';
+      const allKnown=rows.reduce((n,x)=>n+x.volKnown,0), allEarly=rows.reduce((n,x)=>n+x.earlyVol,0);
+      const allVol=current.filter(mrVoluntary).length;
+      const leading=rows.filter(x=>x.earlyVol>0).slice().sort((a,b)=>b.earlyVol-a.earlyVol||b.ratio-a.ratio).slice(0,3);
+      const note=leading.length?`<p class="mrnote"><strong>집중 점검:</strong> ${leading.map(x=>`${esc(x.division)} ${x.earlyVol}명 (${x.ratio.toFixed(1)}%, 주요 세부 사유: ${esc(x.topReason)})`).join(' · ')}. 해당 조직의 온보딩·직무 적합성·리더십 면담 결과를 확인하세요. 원인이 확정된 것은 아닙니다.</p>`:'';
+      return `<div class="mrkpis" style="grid-template-columns:repeat(3,minmax(0,1fr))"><div><span>1년 미만 자발퇴사</span><b>${allEarly}명</b><small>근속정보 확인 대상</small></div><div><span>자발퇴사 내 1년 미만 비중</span><b>${mrPct(allEarly,allKnown)}</b><small>근속정보 확인 ${allKnown}명 기준</small></div><div><span>근속정보 누락</span><b>${allVol-allKnown}명</b><small>당월 전체 자발퇴사 ${allVol}명</small></div></div>
+      ${mrTable(['Division','자발퇴사(근속 확인)','1년 미만 자발퇴사','1년 미만 비중','주요 세부 사유'],rows.map(x=>[x.division,x.volKnown+'명',x.earlyVol+'명',x.ratio.toFixed(1)+'%',x.topReason]))}
+      ${note}`;
+    })()}
+    <p class="mrnote">※ 위의 ‘1년 미만 비중’은 <strong>근속기간이 확인된 자발퇴사자 중 조기퇴사자 비율</strong>입니다. 해당 Division의 1년 미만 재직자 전체를 분모로 한 공식 ‘조기 자발퇴사율’은 아니며, 정확한 퇴사율을 계산하려면 해당 기간 근속 1년 미만 재직자 수가 추가로 필요합니다. 소수 인원 조직은 비율만으로 비교하지 마세요.</p>
+  </div>
   <div class="card"><h3>분석 기준 및 주의 사항</h3><p class="mrnote">퇴사일 +1일을 집계월로 사용합니다. 이직처 회사명은 1건부터 보여주므로 개인 식별 가능성이 커집니다. 이 화면과 원본 API 응답은 인사 권한이 있는 내부 사용자에게만 제공해야 합니다. 개인별 인사정보가 공개 GitHub Pages의 API 응답에서 노출되지 않도록 서버 권한 관리가 필요합니다. 퇴사자는 퇴직면담 기록이 존재하는 경우만 Division 분석에 반영합니다. 권고사직 제외 분석은 퇴사사유와 세부 사유의 표기 키워드 기반이며 모든 자발·비자발 사유가 정확히 분류되었다는 뜻은 아닙니다. 조직 생성/소멸은 명칭 변경이나 원본 누락 가능성이 있습니다. 월별 명부 차분에 따른 ‘신규 등장’은 정식 입사 확정과 다르고, 월별 퇴직면담 건수와 HC 집계는 범위가 다를 수 있습니다.</p></div>`;
   mrLine(report.querySelector('#mrReasons'),history,reasonChart);
  }
