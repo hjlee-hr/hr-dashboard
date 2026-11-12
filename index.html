@@ -1060,13 +1060,42 @@ function summary(m){
   const hires=(D['11_CurrentMonth_People']||[]).filter(x=>{
     const d=pd(x['입사일']);return d!==null&&d<=today&&new Date(d).toISOString().slice(0,7)===ym;
   }).map(x=>({name:x['이름'],div:x['Division'],team:x['Team'],date:x['입사일']}));
-  const exits=(D['05_Offboarding']||[]).filter(x=>{
-    const d=pd(x['퇴사일']);if(d===null)return false;
-    // 실제 퇴사일은 전일까지, 말일 퇴사는 익월 1일에 집계합니다.
-    // 어제 퇴사자의 effective는 오늘과 같으므로 반드시 <= today입니다.
-    const effective=d+86400000;
+  // v19.8: 원본 API 행의 날짜를 먼저 정규화하고 집계 대상 여부를 판단합니다.
+  // date-only 문자열을 UTC 밀리초로 통일해 기기 시간대의 영향을 피합니다.
+  const summaryExitDate=value=>{
+    if(value instanceof Date&&!Number.isNaN(value.getTime()))
+      return Date.UTC(value.getFullYear(),value.getMonth(),value.getDate());
+    const raw=String(value??'').trim();
+    if(!raw)return null;
+    // 2026-11-11, 2026. 11. 11., 2026년 11월 11일, 2026/11/11 등
+    const match=raw.match(/(\d{4})\D+(\d{1,2})\D+(\d{1,2})(?!\d)/);
+    if(!match)return null;
+    const y=+match[1],mo=+match[2],day=+match[3];
+    const utc=Date.UTC(y,mo-1,day),parsed=new Date(utc);
+    return parsed.getUTCFullYear()===y&&parsed.getUTCMonth()===mo-1&&parsed.getUTCDate()===day?utc:null;
+  };
+  const offSource=D['05_Offboarding'];
+  const offRows=Array.isArray(offSource)?offSource:[];
+  const exitDateOf=x=>x['퇴사일']??x['퇴사 일']??x['퇴사일자']??x['퇴사 예정일'];
+  const exitEntries=offRows.map(x=>({row:x,day:summaryExitDate(exitDateOf(x))}));
+  const exits=exitEntries.filter(({day})=>{
+    if(day===null)return false;
+    const effective=day+86400000; // 퇴사 다음날이 귀속일: 말일 퇴사자는 익월
     return effective<=today&&new Date(effective).toISOString().slice(0,7)===ym;
-  }).map(x=>({name:x['성명']||x['이름']||'',div:x['소속']||x['Division']||'',team:x['팀']||x['Team']||'',date:x['퇴사일']}));
+  }).map(({row:x})=>({name:x['성명']||x['이름']||'',div:x['소속']||x['Division']||'',team:x['팀']||x['Team']||'',date:exitDateOf(x)}));
+  const exitDiagnostic=()=>{
+    const malformed=exitEntries.filter(x=>x.day===null).length;
+    const latest=exitEntries.filter(x=>x.day!==null)
+      .sort((a,b)=>b.day-a.day).slice(0,6).map(x=>String(exitDateOf(x.row)||''));
+    const priorDay=new Date(today-86400000).toISOString().slice(0,10);
+    const yesterdayInApi=exitEntries.filter(x=>x.day===today-86400000).length;
+    return `<div class="mrnote" style="margin-top:8px;line-height:1.8">
+      <strong>명단 연결 확인</strong> · API 원본 ${offRows.length}행 · 날짜 인식 실패 ${malformed}행 · ${priorDay} 퇴사기록 ${yesterdayInApi}건
+      <div>최근 API 퇴사일: ${esc(latest.join(', ')||'확인 불가')}</div>
+      ${yesterdayInApi===0?'<div>어제 퇴사자가 원본 시트에는 있지만 API 조회 결과에는 없습니다. WebApp이 읽는 스프레드시트 및 배포 버전을 확인해 주세요.</div>':''}
+      ${malformed>0?'<div>날짜 형식을 인식하지 못한 행이 있습니다. 05_Offboarding의 퇴사일 표시 형식을 확인해 주세요.</div>':''}
+    </div>`;
+  };
   const listHtml=(arr,title,dateLabel,missing)=>`<h3>${title} (${arr.length}명)</h3>${arr.length?`<div class="tw"><table><thead><tr><th>이름</th><th>소속</th><th>${dateLabel}</th></tr></thead><tbody>${arr.map(x=>`<tr><td>${esc(x.name)}</td><td>${esc(x.div)}</td><td>${esc(x.date)}</td></tr>`).join('')}</tbody></table></div>`:`<p class="mrnote">${missing}</p>`}`;
   const detail=document.createElement('section');detail.id='summary-person-detail';detail.className='card hide';detail.setAttribute('aria-live','polite');
   m.querySelector('.kpis').after(detail);
@@ -1092,6 +1121,7 @@ function summary(m){
       const reported=num(l?.[kind==='hire'?'신규입사자':'퇴사자']);
       const count=kind==='hire'?hires.length:exits.length;
       detail.insertAdjacentHTML('beforeend',`<p class="mrnote">카드 집계 ${reported}명 · 명단 ${count}명. ${reported!==count?'집계와 명단에 차이가 있습니다. 원본 시트의 갱신 시점 및 퇴사일을 확인해 주세요.':''} 퇴사자는 실제 퇴사일 다음날을 집계 기준일로 사용하며, 실제 퇴사일 전일까지 반영합니다.</p>`);
+      if(kind==='exit'&&reported!==count)detail.insertAdjacentHTML('beforeend',exitDiagnostic());
     };
     node.onclick=toggle;node.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();toggle();}};
   });
