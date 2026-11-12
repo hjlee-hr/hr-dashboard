@@ -1050,16 +1050,23 @@ function summary(m){
    ${kpi('trend','전월말 대비',sgn(cur-prev),'전월말 '+prev+'명')}
    ${l?kpi('userplus','당월 신규입사자',esc(l['신규입사자'])+'명','당월 1일~오늘까지 입사자')+kpi('userminus','당월 퇴사자',esc(l['퇴사자'])+'명','당월 1일~전일까지 퇴사자'):''}</div><p class="hc-basis-note">※ 인원수는 <strong>4대보험 가입자 기준</strong>입니다. (말일 퇴사자는 당월 재직자로 표기됩니다.)</p>`);
   // 명단은 원본 API의 출처를 구분합니다. 집계 숫자를 명단 개수로 대체하지 않습니다.
-  const now=new Date(),ym=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0');
-  const today=Date.UTC(now.getFullYear(),now.getMonth(),now.getDate());
+  // 인사 집계는 접속자의 기기 시간대가 아닌 한국시간(Asia/Seoul)을 기준으로 합니다.
+  const koreaToday=new Intl.DateTimeFormat('en-CA',{
+    timeZone:'Asia/Seoul',year:'numeric',month:'2-digit',day:'2-digit'
+  }).formatToParts(new Date());
+  const krPart=type=>koreaToday.find(p=>p.type===type).value;
+  const ym=krPart('year')+'-'+krPart('month');
+  const today=Date.UTC(+krPart('year'),+krPart('month')-1,+krPart('day'));
   const hires=(D['11_CurrentMonth_People']||[]).filter(x=>{
     const d=pd(x['입사일']);return d!==null&&d<=today&&new Date(d).toISOString().slice(0,7)===ym;
   }).map(x=>({name:x['이름'],div:x['Division'],team:x['Team'],date:x['입사일']}));
   const exits=(D['05_Offboarding']||[]).filter(x=>{
     const d=pd(x['퇴사일']);if(d===null)return false;
+    // 실제 퇴사일은 전일까지, 말일 퇴사는 익월 1일에 집계합니다.
+    // 어제 퇴사자의 effective는 오늘과 같으므로 반드시 <= today입니다.
     const effective=d+86400000;
-    return effective<today&&new Date(effective).toISOString().slice(0,7)===ym;
-  }).map(x=>({name:x['성명'],div:x['소속'],team:x['팀']||x['Team']||'',date:x['퇴사일']}));
+    return effective<=today&&new Date(effective).toISOString().slice(0,7)===ym;
+  }).map(x=>({name:x['성명']||x['이름']||'',div:x['소속']||x['Division']||'',team:x['팀']||x['Team']||'',date:x['퇴사일']}));
   const listHtml=(arr,title,dateLabel,missing)=>`<h3>${title} (${arr.length}명)</h3>${arr.length?`<div class="tw"><table><thead><tr><th>이름</th><th>소속</th><th>${dateLabel}</th></tr></thead><tbody>${arr.map(x=>`<tr><td>${esc(x.name)}</td><td>${esc(x.div)}</td><td>${esc(x.date)}</td></tr>`).join('')}</tbody></table></div>`:`<p class="mrnote">${missing}</p>`}`;
   const detail=document.createElement('section');detail.id='summary-person-detail';detail.className='card hide';detail.setAttribute('aria-live','polite');
   m.querySelector('.kpis').after(detail);
@@ -1076,10 +1083,15 @@ function summary(m){
       detail.dataset.kind=kind;detail.classList.remove('hide');node.setAttribute('aria-expanded','true');
       detail.innerHTML=kind==='hire'
         ?listHtml(hires,'당월 신규입사자 명단','입사일',D['11_CurrentMonth_People']===undefined?'입사자 명단 데이터가 연결되지 않았습니다. Apps Script 집계 시트와 API를 확인해 주세요.':'해당 기준의 입사자가 없거나 최신 원본 명단이 반영되지 않았습니다.')
-        :listHtml(exits,'당월 퇴사자 명단','퇴사일','집계 기준에 해당하는 퇴사자가 없습니다.');
+        :listHtml(exits,'당월 퇴사자 명단','퇴사일',
+            D['05_Offboarding']===undefined
+              ? '퇴사자 원본 데이터(05_Offboarding)가 API에 연결되지 않았습니다. WebApp의 API_SHEETS 목록을 확인해 주세요.'
+              : (D['05_Offboarding'].length===0
+                  ? '퇴사자 원본 데이터(05_Offboarding)가 비어 있습니다. updateOffboardingV2 실행 결과를 확인해 주세요.'
+                  : '원본 퇴사자 명단에는 데이터가 있으나, 당월 1일부터 전일까지 집계 기준에 해당하는 퇴사자가 없습니다. 05_Offboarding의 퇴사일과 상단 갱신일을 확인해 주세요.'));
       const reported=num(l?.[kind==='hire'?'신규입사자':'퇴사자']);
       const count=kind==='hire'?hires.length:exits.length;
-      detail.insertAdjacentHTML('beforeend',`<p class="mrnote">카드 집계 ${reported}명 · 명단 ${count}명. 서로 다르면 원본 데이터와 집계 기준을 확인해 주세요. 퇴사는 퇴사일 다음날을 집계 기준일로 사용하고, 전일까지 반영합니다.</p>`);
+      detail.insertAdjacentHTML('beforeend',`<p class="mrnote">카드 집계 ${reported}명 · 명단 ${count}명. ${reported!==count?'집계와 명단에 차이가 있습니다. 원본 시트의 갱신 시점 및 퇴사일을 확인해 주세요.':''} 퇴사자는 실제 퇴사일 다음날을 집계 기준일로 사용하며, 실제 퇴사일 전일까지 반영합니다.</p>`);
     };
     node.onclick=toggle;node.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();toggle();}};
   });
