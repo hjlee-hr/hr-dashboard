@@ -1162,7 +1162,7 @@ const leaveSoon=()=>(D['04_Longterm_Leave']||[]).map(x=>({...x,n:dday(x['휴직�
 function shortenedWorkCard(m){
   const rows=D['12_Shortened_Work'];
   if(!Array.isArray(rows)){
-    markNoticeCard(card(m,'단축근로 · 육아기 / 임신기','<p class="cd">단축근로 데이터가 아직 연결되지 않았습니다. 12_Shortened_Work 시트와 웹 API를 확인해 주세요.</p>'),'shortened');
+    markNoticeCard(card(m,'출산/육아 예정 현황','<p class="cd">단축근로 데이터가 아직 연결되지 않았습니다. 12_Shortened_Work 시트와 웹 API를 확인해 주세요.</p>'),'shortened');
     return;
   }
   const today=new Date(), day=[today.getFullYear(),String(today.getMonth()+1).padStart(2,'0'),String(today.getDate()).padStart(2,'0')].join('-');
@@ -1173,7 +1173,7 @@ function shortenedWorkCard(m){
   valid.sort((a,b)=>a.state===b.state?String(a['시작일']).localeCompare(String(b['시작일'])):a.state==='진행 중'?-1:1);
   const ongoing=valid.filter(x=>x.state==='진행 중').length,planned=valid.length-ongoing;
   const body=valid.length?`<div class="tw"><table><thead><tr><th>순번</th><th>이름</th><th>Division</th><th>Team</th><th>구분</th><th>시작일</th><th>종료일</th><th>상태</th></tr></thead><tbody>${valid.map((x,i)=>`<tr><td>${i+1}</td><td>${esc(x['성함'])}</td><td>${esc(x['Division'])}</td><td>${esc(x['Team'])}</td><td>${esc(x['종류'])}</td><td>${esc(x['시작일'])}</td><td>${esc(x['종료일'])}</td><td><span class="pill ${x.state==='진행 중'?'w':'g'}">${x.state}</span></td></tr>`).join('')}</tbody></table></div>`:'<p class="cd">현재 예정 또는 진행 중인 단축근로 대상자가 없습니다.</p>';
-  markNoticeCard(card(m,`단축근로 현황 (${valid.length}명 · 진행 중 ${ongoing}명 / 예정 ${planned}명)`,body+'<p class="mrnote">※ 종료일이 지난 대상자는 표시하지 않습니다. 기준일은 화면을 조회하는 오늘입니다.</p>'),'shortened');
+  markNoticeCard(card(m,`출산/육아 예정 현황 (${valid.length}명 · 진행 중 ${ongoing}명 / 예정 ${planned}명)`,body+'<p class="mrnote">※ 종료일이 지난 대상자는 표시하지 않습니다. 기준일은 화면을 조회하는 오늘입니다.</p>'),'shortened');
 }
 
 /* 예정·알림 카드 공통 서식: 카드 ID, 표 스타일, 열 간격, 보조 안내 */
